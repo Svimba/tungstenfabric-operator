@@ -1,11 +1,16 @@
 # TungstenFabric operator
 
-Under construction
+Old version was replaced.
 
-## Requires
+Still under construction.
 
-- tunstenfabric-config-operator
-- tunstenfabric-control-operator
-- tunstenfabric-analytic-operator
-- tunstenfabric-web-operator
+## Currently can handle:
 
+- config-operator
+
+
+## TODO:
+- implement control
+- implement analytics
+- implement 3rd party operators (Cassandra, Zookeeper, Redis ...)
+- extend for ConfigMap generator with default values.
