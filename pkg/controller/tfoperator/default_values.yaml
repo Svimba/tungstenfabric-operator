@@ -1,0 +1,87 @@
+# Third party services default config
+rabbitmq:
+  size: 3
+  domain_name: rabbitmq
+  envs:
+    - key: HOST_IP
+      value: 127.0.0.1
+  services: 
+    - name: rabbitmq
+      ports: 
+        - name: queue-port
+          port: 5672
+          proto: TCP
+        - name: cluster-port
+          port: 4369
+          proto: TCP
+cassandra-config:
+  domain_name: cassandra-config
+  size: 3
+  services:
+    - name: cassandra-config
+      ports:
+        - name: cql
+          port: 9042
+        - name: trift
+          port: 9061
+cassandra-analytics:
+  domain_name: cassandra-analytics
+  size: 3
+  services:
+    - name: cassandra-analytics
+      ports:
+        - name: cql
+          port: 9042
+zookeeper:
+  domain_name: zookeeper
+  size: 3
+  services:
+    - name: tf-zookeeper
+      ports:
+        - name: zk
+          port: 2181
+
+
+# TF default configuration 
+# config
+tf-config-api:
+  domain_name: tf-config-api
+#  image: willco/tf-config-api:latest
+  image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-kubernetes-kube-manager:5.1-4.15.0-54-generic
+  size: 1
+tf-config-svc_monitor:
+  domain_name: tf-config-svc-monitor
+  image: willco/tf-config
+  size: 1
+tf-config-schema:
+  domain_name: tf-config-schema
+  image: willco/tf-config-svc-monitor
+  size: 1
+tf-config-device_manager:
+  domain_name: tf-config-devicemgr
+  image: willco/tf-config-device-manager
+  size: 1
+
+  #control
+tf-control-control:
+  domain_name: tf-control-control
+  image: willco/tf-control-control
+  size: 1
+tf-control-dns:
+  domain_name: tf-control-dns
+  image: willco/tf-control-dns
+  size: 1
+tf-control-named:
+  domain_name: tf-control-named
+  image: willco/tf-control-named
+  size: 1
+
+#analytics
+tf-analytics-collector:
+  domain_name: tf-analytics-collector
+  image: willco/tf-analytics-collector
+  size: 1
+tf-analytics-api:
+  domain_name: tf-analytics-api
+  image: willco/tf-analytics-api
+  size: 1

@@ -5,6 +5,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/operator-framework/operator-sdk v0.9.0
 	github.com/spf13/pflag v1.0.3
+	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190718062839-c8a0b81cb10e
 	k8s.io/apiextensions-apiserver v0.0.0-20190228180357-d002e88f6236
 	k8s.io/apimachinery v0.0.0-20190612125636-6a5db36e93ad

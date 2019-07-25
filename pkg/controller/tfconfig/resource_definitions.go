@@ -65,6 +65,8 @@ func newDeploymentForAPI(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 	labels := map[string]string{
 		"app": cr.Name + "-api",
 	}
+	// var cmd []string
+	// cmd = append(cmd, "env")
 
 	deploy := &betav1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -83,6 +85,7 @@ func newDeploymentForAPI(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 						{
 							Name:  cr.Name + "-api",
 							Image: cr.Spec.APISpec.Image,
+							// Command: cmd,
 						},
 					},
 				},

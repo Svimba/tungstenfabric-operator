@@ -57,7 +57,7 @@ type TFConfigSpec struct {
 	SVCMonitorSpec TFConfigSVCMonitorSpec `json:"svc-monitor"`
 	SchemaSpec     TFConfigSchemaSpec     `json:"schema"`
 	DeviceMgrSpec  TFConfigDeviceMgrSpec  `json:"devicemgr"`
-	CofigMapList   []string               `json:"configmaps,omitempty"`
+	ConfigMapList  []string               `json:"configmaps,omitempty"`
 }
 
 // TFConfigStatus defines the observed state of TFConfig

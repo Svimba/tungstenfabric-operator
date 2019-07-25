@@ -6,7 +6,7 @@ ENV OPERATOR=/usr/local/bin/tungstenfabric-operator \
 
 # install operator binary
 COPY build/_output/bin/tungstenfabric-operator ${OPERATOR}
-
+COPY build/default_values.yaml /
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup
 

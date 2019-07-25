@@ -1,7 +1,0 @@
-apiVersion: config.tf.mirantis.com/v1alpha1
-kind: TFConfig
-metadata:
-  name: example-tfconfig
-spec:
-  # Add fields here
-  size: 3

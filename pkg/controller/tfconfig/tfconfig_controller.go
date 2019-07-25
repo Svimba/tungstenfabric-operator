@@ -149,11 +149,11 @@ func (r *ReconcileTFConfig) Reconcile(request reconcile.Request) (reconcile.Resu
 	return reconcile.Result{}, nil
 }
 
-// setAvailableConfigMaps Prepares and sets list of available config maps to Status.CofigMapList
+// setAvailableConfigMaps Prepares and sets list of available config maps to Status.ConfigMapList
 func (r *ReconcileTFConfig) setAvailableConfigMaps() error {
 
 	var listAvailableCfgMaps []string
-	for _, cfm := range r.instance.Spec.CofigMapList {
+	for _, cfm := range r.instance.Spec.ConfigMapList {
 		exists, err := r.checkConfigMapExists(cfm)
 		if err != nil {
 			return err

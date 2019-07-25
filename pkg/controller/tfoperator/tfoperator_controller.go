@@ -2,10 +2,13 @@ package tfoperator
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	operatorv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1"
 	"github.com/go-logr/logr"
+	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -82,6 +85,7 @@ type ReconcileTFOperator struct {
 	instance  *operatorv1alpha1.TFOperator
 	config    *configv1alpha1.TFConfig
 	reqLogger logr.Logger
+	defaults  *Entities
 }
 
 // Reconcile reads that state of the cluster for a TFOperator object and makes changes based on the state read
@@ -95,14 +99,25 @@ func (r *ReconcileTFOperator) Reconcile(request reconcile.Request) (reconcile.Re
 	r.reqLogger = log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	r.reqLogger.Info("Reconciling TFOperator")
 
+	// Load default values
+	r.defaults = &Entities{}
+	defaultsFile := "/default_values.yaml"
+	yamlDefaults, err := ioutil.ReadFile(defaultsFile)
+	if err != nil {
+		r.reqLogger.Error(err, fmt.Sprintf("Cannot load default values from %s", defaultsFile))
+	}
+	err = yaml.Unmarshal(yamlDefaults, r.defaults)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+	}
+
 	// Fetch the TFOperator instance
 	r.instance = &operatorv1alpha1.TFOperator{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, r.instance)
+	err = r.client.Get(context.TODO(), request.NamespacedName, r.instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
@@ -110,6 +125,14 @@ func (r *ReconcileTFOperator) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	requeue, err := r.handleConfigOperator()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if requeue {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	requeue, err = r.handleConfigMaps()
 	if err != nil {
 		return reconcile.Result{}, err
 	}

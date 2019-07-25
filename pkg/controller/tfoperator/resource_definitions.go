@@ -1,6 +1,8 @@
 package tfoperator
 
 import (
+	"fmt"
+
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	operatorv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1"
 	betav1 "k8s.io/api/apps/v1beta1"
@@ -96,10 +98,33 @@ func newOperatorForConfig(cr *operatorv1alpha1.TFOperator) *betav1.Deployment {
 	}
 }
 
+func convertConfigPortsToPorts(cp []configv1alpha1.Port) []Port {
+	var out []Port
+	for _, p := range cp {
+		out = append(out, Port{Name: p.Name, Port: p.Port})
+	}
+	return out
+}
+
 // newCRForConfig returns CR object for Config
-func newCRForConfig(cr *operatorv1alpha1.TFOperator) *configv1alpha1.TFConfig {
+func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *configv1alpha1.TFConfig {
 	var replicas int32
+	var image string
+	var apiPorts []Port
+
 	replicas = 3
+	// Image
+	if len(cr.Spec.TFConfig.APISpec.Image) > 0 {
+		image = cr.Spec.TFConfig.APISpec.Image
+	} else {
+		image = defaults.Get("tf-config-api").Image
+	}
+	//Ports
+	if len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
+		apiPorts = convertConfigPortsToPorts(cr.Spec.TFConfig.APISpec.Ports)
+	} else {
+		apiPorts = defaults.Get("tf-config-api").Services[0].Ports
+	}
 	return &configv1alpha1.TFConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "TFConfig",
@@ -110,20 +135,12 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator) *configv1alpha1.TFConfig {
 			Namespace: cr.Namespace,
 		},
 		Spec: configv1alpha1.TFConfigSpec{
+			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap"},
 			APISpec: configv1alpha1.TFConfigAPISpec{
 				Enabled:  true,
 				Replicas: &replicas,
-				Image:    "willco/opencontrail-config-api:r5.1",
-				Ports: []configv1alpha1.Port{
-					{
-						Name: "api",
-						Port: 9100,
-					},
-					{
-						Name: "introspect",
-						Port: 8084,
-					},
-				},
+				Image:    image,
+				Ports:    apiPorts,
 			},
 			SVCMonitorSpec: configv1alpha1.TFConfigSVCMonitorSpec{
 				Enabled:  true,
@@ -152,6 +169,36 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator) *configv1alpha1.TFConfig {
 					},
 				},
 			},
+		},
+	}
+}
+
+func getConfigMapForRabbitMQ(cr *operatorv1alpha1.TFOperator, defaults *Entities) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tf-rabbitmq-cfgmap",
+			Namespace: cr.Namespace,
+		},
+		Data: map[string]string{
+			"RABBITMQ_NODES":     defaults.Get("rabbitmq").Services[0].Name,
+			"RABBITMQ_NODE_PORT": fmt.Sprintf("%d", defaults.Get("rabbitmq").Services[0].Ports[0].Port),
+			"RABBITMQ_SERVERS":   fmt.Sprintf("%s:%d", defaults.Get("rabbitmq").Services[0].Name, defaults.Get("rabbitmq").Services[0].Ports[0].Port),
+		},
+	}
+}
+
+func getConfigMapForZookeeper(cr *operatorv1alpha1.TFOperator, defaults *Entities) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tf-zookeeper-cfgmap",
+			Namespace: cr.Namespace,
+		},
+		Data: map[string]string{
+			"ZOOKEEPER_NODES":               defaults.Get("zookeeper").Services[0].Name,
+			"ZOOKEEPER_PORT":                fmt.Sprintf("%d", defaults.Get("zookeeper").Services[0].Ports[0].Port),
+			"ZOOKEEPER_PORTS":               "2888:3888",
+			"ZOOKEEPER_SERVERS":             fmt.Sprintf("%s:%d", defaults.Get("zookeeper").Services[0].Name, defaults.Get("zookeeper").Services[0].Ports[0].Port),
+			"ZOOKEEPER_SERVERS_SPACE_DELIM": fmt.Sprintf("%s:%d", defaults.Get("zookeeper").Services[0].Name, defaults.Get("zookeeper").Services[0].Ports[0].Port),
 		},
 	}
 }
