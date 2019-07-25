@@ -98,10 +98,10 @@ func newOperatorForConfig(cr *operatorv1alpha1.TFOperator) *betav1.Deployment {
 	}
 }
 
-func convertConfigPortsToPorts(cp []configv1alpha1.Port) []Port {
-	var out []Port
+func convertPortsToConfigPorts(cp []Port) []configv1alpha1.Port {
+	var out []configv1alpha1.Port
 	for _, p := range cp {
-		out = append(out, Port{Name: p.Name, Port: p.Port})
+		out = append(out, configv1alpha1.Port{Name: p.Name, Port: p.Port})
 	}
 	return out
 }
@@ -110,7 +110,7 @@ func convertConfigPortsToPorts(cp []configv1alpha1.Port) []Port {
 func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *configv1alpha1.TFConfig {
 	var replicas int32
 	var image string
-	var apiPorts []Port
+	var apiPorts []configv1alpha1.Port
 
 	replicas = 3
 	// Image
@@ -121,9 +121,9 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 	}
 	//Ports
 	if len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
-		apiPorts = convertConfigPortsToPorts(cr.Spec.TFConfig.APISpec.Ports)
+		apiPorts = cr.Spec.TFConfig.APISpec.Ports
 	} else {
-		apiPorts = defaults.Get("tf-config-api").Services[0].Ports
+		apiPorts = convertPortsToConfigPorts(defaults.Get("tf-config-api").Services[0].Ports)
 	}
 	return &configv1alpha1.TFConfig{
 		TypeMeta: metav1.TypeMeta{
