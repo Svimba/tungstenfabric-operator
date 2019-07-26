@@ -7,9 +7,14 @@ spec:
     api:
       replicas: 1
       image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-kubernetes-kube-manager:5.1-4.15.0-54-generic
+      ports:
+        - name: api
+          port: 9100
+        - name: introspect
+          port: 8084
       env:
         - name: TF_SANDESH_SEND_RATE_LIMIT
-          value: 100
+          value: "100"
 
     svc-monitor:
       replicas: 1
