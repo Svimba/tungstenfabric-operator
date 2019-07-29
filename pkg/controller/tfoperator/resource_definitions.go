@@ -5,7 +5,6 @@ import (
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	operatorv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1"
-	betav1 "k8s.io/api/apps/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	extbetav1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,70 +28,6 @@ func newCRDForConfig(cr *operatorv1alpha1.TFOperator) *extbetav1.CustomResourceD
 			Version: "v1alpha1",
 			Subresources: &extbetav1.CustomResourceSubresources{
 				Status: &extbetav1.CustomResourceSubresourceStatus{},
-			},
-		},
-	}
-}
-
-// newOperatorForConfig returns Deployment of TF-Config operator
-func newOperatorForConfig(cr *operatorv1alpha1.TFOperator) *betav1.Deployment {
-	labels := map[string]string{
-		"name": "tungstenfabric-config-operator",
-	}
-	var replicas int32
-	replicas = 1
-	return &betav1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "tungstenfabric-config-operator",
-			Namespace: cr.Namespace,
-		},
-		Spec: betav1.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					ServiceAccountName: "tungstenfabric-operator",
-					Containers: []corev1.Container{
-						{
-							Name:  "tungstenfabric-config-operator",
-							Image: "willco/tf-config-operator",
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "metrics",
-									ContainerPort: 60000,
-								},
-							},
-							Command: []string{"tungstenfabric-config-operator"},
-							Env: []corev1.EnvVar{
-								{
-									Name: "WATCH_NAMESPACE",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.namespace",
-										},
-									},
-								},
-								{
-									Name: "POD_NAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.name",
-										},
-									},
-								},
-								{
-									Name:  "OPERATOR_NAME",
-									Value: "tungstenfabric-config-operator",
-								},
-							},
-						},
-					},
-				},
 			},
 		},
 	}

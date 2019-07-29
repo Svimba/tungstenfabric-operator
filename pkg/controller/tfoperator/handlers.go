@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
-	betav1 "k8s.io/api/apps/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	extbetav1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -37,28 +36,6 @@ func (r *ReconcileTFOperator) handleConfigOperator() (bool, error) {
 	}
 	// Config CRD already exists - don't requeue
 	r.reqLogger.Info("Skip reconcile: Config CRD already exists", "Deploy.Namespace", foundCRDConfig.Namespace, "Deploy.Name", foundCRDConfig.Name)
-
-	// Define a new Config Operator object
-	configOperator := newOperatorForConfig(r.instance)
-	// Set TFOperator instance as the owner and controller
-	if err := controllerutil.SetControllerReference(r.instance, configOperator, r.scheme); err != nil {
-		return false, err
-	}
-	// Check if this Config Operator already exists
-	foundConfigOperator := &betav1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: configOperator.Name, Namespace: configOperator.Namespace}, foundConfigOperator)
-	if err != nil && errors.IsNotFound(err) {
-		r.reqLogger.Info("Creating a new Config Operator", "Deploy.Namespace", configOperator.Namespace, "Deploy.Name", configOperator.Name)
-		err = r.client.Create(context.TODO(), configOperator)
-		if err != nil {
-			return false, err
-		}
-		// Operator has been created successfully - don't requeue
-	} else if err != nil {
-		return false, err
-	}
-	// Config Operator already exists - don't requeue
-	r.reqLogger.Info("Skip reconcile: Config Operator already exists", "Deploy.Namespace", foundConfigOperator.Namespace, "Deploy.Name", foundConfigOperator.Name)
 
 	// Define a new CR for Config Operator object
 	crConfig := newCRForConfig(r.instance, r.defaults)
