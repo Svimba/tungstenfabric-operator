@@ -39,7 +39,10 @@ type Entities map[string]*Entity
 
 // Get .
 func (s *Entities) Get(entity string) *Entity {
-	return (*s)[entity]
+	if (*s)[entity] != nil {
+		return (*s)[entity]
+	}
+	return &Entity{}
 }
 
 // Unmarshal .

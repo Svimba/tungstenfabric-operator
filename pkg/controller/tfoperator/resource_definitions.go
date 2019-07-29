@@ -98,56 +98,66 @@ func newOperatorForConfig(cr *operatorv1alpha1.TFOperator) *betav1.Deployment {
 	}
 }
 
-func convertPortsToConfigPorts(cp []Port) []configv1alpha1.Port {
+func convertPortsToConfigPorts(svc []Service) []configv1alpha1.Port {
 	var out []configv1alpha1.Port
-	for _, p := range cp {
-		out = append(out, configv1alpha1.Port{Name: p.Name, Port: p.Port})
+	for _, s := range svc {
+		for _, p := range s.Ports {
+			out = append(out, configv1alpha1.Port{Name: p.Name, Port: p.Port})
+		}
 	}
 	return out
 }
 
 // newCRForConfig returns CR object for Config
 func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *configv1alpha1.TFConfig {
-	var replicas map[string]*int32
-	var image map[string]string
-	var ports map[string][]configv1alpha1.Port
+	replicas := make(map[string]*int32)
+	image := make(map[string]string)
+	ports := make(map[string][]configv1alpha1.Port)
 
-	// Image
-	if image["api"] = defaults.Get("tf-config-api").Image; len(cr.Spec.TFConfig.APISpec.Image) > 0 {
-		image["api"] = cr.Spec.TFConfig.APISpec.Image
+	// API
+	if &cr.Spec.TFConfig.APISpec != nil {
+		if replicas["api"] = &defaults.Get("tf-config-api").Size; cr.Spec.TFConfig.APISpec.Replicas != nil {
+			replicas["api"] = cr.Spec.TFConfig.APISpec.Replicas
+		}
+		if image["api"] = defaults.Get("tf-config-api").Image; len(cr.Spec.TFConfig.APISpec.Image) > 0 {
+			image["api"] = cr.Spec.TFConfig.APISpec.Image
+		}
+		if ports["api"] = convertPortsToConfigPorts(defaults.Get("tf-config-api").Services); len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
+			ports["api"] = cr.Spec.TFConfig.APISpec.Ports
+		}
 	}
-	if image["svc-monitor"] = defaults.Get("tf-config-svc-monitor").Image; len(cr.Spec.TFConfig.SVCMonitorSpec.Image) > 0 {
-		image["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Image
+	// SVC monitor
+	if &cr.Spec.TFConfig.SVCMonitorSpec != nil {
+		if replicas["svc-monitor"] = &defaults.Get("tf-config-svc-monitor").Size; cr.Spec.TFConfig.SVCMonitorSpec.Replicas != nil {
+			replicas["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Replicas
+		}
+		if image["svc-monitor"] = defaults.Get("tf-config-svc-monitor").Image; len(cr.Spec.TFConfig.SVCMonitorSpec.Image) > 0 {
+			image["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Image
+		}
+		if ports["svc-monitor"] = convertPortsToConfigPorts(defaults.Get("tf-config-svc-monitor").Services); len(cr.Spec.TFConfig.SVCMonitorSpec.Ports) > 0 {
+			ports["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Ports
+		}
 	}
-	if image["schema"] = defaults.Get("tf-config-schema").Image; len(cr.Spec.TFConfig.SchemaSpec.Image) > 0 {
-		image["schema"] = cr.Spec.TFConfig.SchemaSpec.Image
+	// Schema
+	if &cr.Spec.TFConfig.SchemaSpec != nil {
+		if replicas["schema"] = &defaults.Get("tf-config-schema").Size; cr.Spec.TFConfig.SchemaSpec.Replicas != nil {
+			replicas["schema"] = cr.Spec.TFConfig.SchemaSpec.Replicas
+		}
+		if image["schema"] = defaults.Get("tf-config-schema").Image; len(cr.Spec.TFConfig.SchemaSpec.Image) > 0 {
+			image["schema"] = cr.Spec.TFConfig.SchemaSpec.Image
+		}
 	}
-	if image["devicemgr"] = defaults.Get("tf-config-devicemgr").Image; len(cr.Spec.TFConfig.DeviceMgrSpec.Image) > 0 {
-		image["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Image
-	}
-	//Ports
-	if ports["api"] = convertPortsToConfigPorts(defaults.Get("tf-config-api").Services[0].Ports); len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
-		ports["api"] = cr.Spec.TFConfig.APISpec.Ports
-	}
-	if ports["svc-monitor"] = convertPortsToConfigPorts(defaults.Get("tf-config-svc-monitor").Services[0].Ports); len(cr.Spec.TFConfig.SVCMonitorSpec.Ports) > 0 {
-		ports["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Ports
-	}
-	if ports["devicemgr"] = convertPortsToConfigPorts(defaults.Get("tf-config-devicemgr").Services[0].Ports); len(cr.Spec.TFConfig.DeviceMgrSpec.Ports) > 0 {
-		ports["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Ports
-	}
-
-	// Replicas
-	if replicas["api"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.APISpec.Replicas > 0 {
-		replicas["api"] = cr.Spec.TFConfig.APISpec.Replicas
-	}
-	if replicas["svc-monitor"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.SVCMonitorSpec.Replicas > 0 {
-		replicas["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Replicas
-	}
-	if replicas["schema"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.SchemaSpec.Replicas > 0 {
-		replicas["schema"] = cr.Spec.TFConfig.SchemaSpec.Replicas
-	}
-	if replicas["devicemgr"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.DeviceMgrSpec.Replicas > 0 {
-		replicas["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Replicas
+	// Device mgr
+	if &cr.Spec.TFConfig.DeviceMgrSpec != nil {
+		if replicas["devicemgr"] = &defaults.Get("tf-config-devicemgr").Size; cr.Spec.TFConfig.DeviceMgrSpec.Replicas != nil {
+			replicas["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Replicas
+		}
+		if image["devicemgr"] = defaults.Get("tf-config-devicemgr").Image; len(cr.Spec.TFConfig.DeviceMgrSpec.Image) > 0 {
+			image["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Image
+		}
+		if ports["devicemgr"] = convertPortsToConfigPorts(defaults.Get("tf-config-devicemgr").Services); len(cr.Spec.TFConfig.DeviceMgrSpec.Ports) > 0 {
+			ports["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Ports
+		}
 	}
 
 	return &configv1alpha1.TFConfig{
@@ -214,6 +224,20 @@ func getConfigMapForZookeeper(cr *operatorv1alpha1.TFOperator, defaults *Entitie
 			"ZOOKEEPER_PORTS":               "2888:3888",
 			"ZOOKEEPER_SERVERS":             fmt.Sprintf("%s:%d", defaults.Get("zookeeper").Services[0].Name, defaults.Get("zookeeper").Services[0].Ports[0].Port),
 			"ZOOKEEPER_SERVERS_SPACE_DELIM": fmt.Sprintf("%s:%d", defaults.Get("zookeeper").Services[0].Name, defaults.Get("zookeeper").Services[0].Ports[0].Port),
+		},
+	}
+}
+
+func getConfigMapForCassandraConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tf-rabbitmq-cfgmap",
+			Namespace: cr.Namespace,
+		},
+		Data: map[string]string{
+			"RABBITMQ_NODES":     defaults.Get("rabbitmq").Services[0].Name,
+			"RABBITMQ_NODE_PORT": fmt.Sprintf("%d", defaults.Get("rabbitmq").Services[0].Ports[0].Port),
+			"RABBITMQ_SERVERS":   fmt.Sprintf("%s:%d", defaults.Get("rabbitmq").Services[0].Name, defaults.Get("rabbitmq").Services[0].Ports[0].Port),
 		},
 	}
 }
