@@ -108,23 +108,48 @@ func convertPortsToConfigPorts(cp []Port) []configv1alpha1.Port {
 
 // newCRForConfig returns CR object for Config
 func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *configv1alpha1.TFConfig {
-	var replicas int32
-	var image string
-	var apiPorts []configv1alpha1.Port
+	var replicas map[string]*int32
+	var image map[string]string
+	var ports map[string][]configv1alpha1.Port
 
-	replicas = 3
 	// Image
-	if len(cr.Spec.TFConfig.APISpec.Image) > 0 {
-		image = cr.Spec.TFConfig.APISpec.Image
-	} else {
-		image = defaults.Get("tf-config-api").Image
+	if image["api"] = defaults.Get("tf-config-api").Image; len(cr.Spec.TFConfig.APISpec.Image) > 0 {
+		image["api"] = cr.Spec.TFConfig.APISpec.Image
+	}
+	if image["svc-monitor"] = defaults.Get("tf-config-svc-monitor").Image; len(cr.Spec.TFConfig.SVCMonitorSpec.Image) > 0 {
+		image["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Image
+	}
+	if image["schema"] = defaults.Get("tf-config-schema").Image; len(cr.Spec.TFConfig.SchemaSpec.Image) > 0 {
+		image["schema"] = cr.Spec.TFConfig.SchemaSpec.Image
+	}
+	if image["devicemgr"] = defaults.Get("tf-config-devicemgr").Image; len(cr.Spec.TFConfig.DeviceMgrSpec.Image) > 0 {
+		image["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Image
 	}
 	//Ports
-	if len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
-		apiPorts = cr.Spec.TFConfig.APISpec.Ports
-	} else {
-		apiPorts = convertPortsToConfigPorts(defaults.Get("tf-config-api").Services[0].Ports)
+	if ports["api"] = convertPortsToConfigPorts(defaults.Get("tf-config-api").Services[0].Ports); len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
+		ports["api"] = cr.Spec.TFConfig.APISpec.Ports
 	}
+	if ports["svc-monitor"] = convertPortsToConfigPorts(defaults.Get("tf-config-svc-monitor").Services[0].Ports); len(cr.Spec.TFConfig.SVCMonitorSpec.Ports) > 0 {
+		ports["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Ports
+	}
+	if ports["devicemgr"] = convertPortsToConfigPorts(defaults.Get("tf-config-devicemgr").Services[0].Ports); len(cr.Spec.TFConfig.DeviceMgrSpec.Ports) > 0 {
+		ports["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Ports
+	}
+
+	// Replicas
+	if replicas["api"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.APISpec.Replicas > 0 {
+		replicas["api"] = cr.Spec.TFConfig.APISpec.Replicas
+	}
+	if replicas["svc-monitor"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.SVCMonitorSpec.Replicas > 0 {
+		replicas["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Replicas
+	}
+	if replicas["schema"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.SchemaSpec.Replicas > 0 {
+		replicas["schema"] = cr.Spec.TFConfig.SchemaSpec.Replicas
+	}
+	if replicas["devicemgr"] = &defaults.Get("tf-config-api").Size; *cr.Spec.TFConfig.DeviceMgrSpec.Replicas > 0 {
+		replicas["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Replicas
+	}
+
 	return &configv1alpha1.TFConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "TFConfig",
@@ -138,36 +163,26 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap"},
 			APISpec: configv1alpha1.TFConfigAPISpec{
 				Enabled:  true,
-				Replicas: &replicas,
-				Image:    image,
-				Ports:    apiPorts,
+				Replicas: replicas["api"],
+				Image:    image["api"],
+				Ports:    ports["api"],
 			},
 			SVCMonitorSpec: configv1alpha1.TFConfigSVCMonitorSpec{
 				Enabled:  true,
-				Replicas: &replicas,
-				Image:    "willco/opencontrail-config-svc-monitor:r5.1",
-				Ports: []configv1alpha1.Port{
-					{
-						Name: "introspect",
-						Port: 8088,
-					},
-				},
+				Replicas: replicas["svc-monitor"],
+				Image:    image["svc-monitor"],
+				Ports:    ports["svc-monitor"],
 			},
 			SchemaSpec: configv1alpha1.TFConfigSchemaSpec{
 				Enabled:  true,
-				Replicas: &replicas,
-				Image:    "willco/opencontrail-config-schema:r5.1",
+				Replicas: replicas["schema"],
+				Image:    image["schema"],
 			},
 			DeviceMgrSpec: configv1alpha1.TFConfigDeviceMgrSpec{
 				Enabled:  true,
-				Replicas: &replicas,
-				Image:    "willco/opencontrail-config-devicemgr:r5.1",
-				Ports: []configv1alpha1.Port{
-					{
-						Name: "introspect",
-						Port: 8087,
-					},
-				},
+				Replicas: replicas["devicemgr"],
+				Image:    image["devicemgr"],
+				Ports:    ports["devicemgr"],
 			},
 		},
 	}

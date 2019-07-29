@@ -28,7 +28,7 @@ type Env struct {
 // Entity .
 type Entity struct {
 	Name     string    `yaml:"domain_name"`
-	Size     int       `yaml:"size"`
+	Size     int32     `yaml:"size"`
 	Services []Service `yaml:"services"`
 	Envs     []Env     `yaml:"envs"`
 	Image    string    `yaml:"image"`
