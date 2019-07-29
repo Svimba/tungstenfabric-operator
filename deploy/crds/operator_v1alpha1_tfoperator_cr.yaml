@@ -6,25 +6,30 @@ spec:
   tf-config:
     api:
       replicas: 1
-      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-kubernetes-kube-manager:5.1-4.15.0-54-generic
+      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-config-api:5.1-4.15.0-54-generic
+      ports:
+        - name: api
+          port: 9100
+        - name: introspect
+          port: 8084
       env:
         - name: TF_SANDESH_SEND_RATE_LIMIT
-          value: 100
+          value: "100"
 
     svc-monitor:
       replicas: 1
-      image: willco/opencontrail-config-svc-monitor:r5.1
+      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-config-svcmonitor:5.1-4.15.0-54-generic
       ports:
         - name: introspect
           port: 8088
 
     schema:
       replicas: 1
-      image: willco/opencontrail-config-schema:r5.1
+      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-config-schema:5.1-4.15.0-54-generic
 
     devicemgr:
       replicas: 1
-      image: willco/opencontrail-config-devicemgr:r5.1
+      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-config-devicemgr:5.1-4.15.0-54-generic
       ports:
         - name: introspect
           port: 8087
