@@ -23,7 +23,7 @@ cassandra-config:
         - name: cql
           port: 9042
         - name: trift
-          port: 9061
+          port: 9160
 cassandra-analytics:
   domain_name: cassandra-analytics
   size: 3

@@ -43,11 +43,20 @@ func convertPortsToConfigPorts(svc []Service) []configv1alpha1.Port {
 	return out
 }
 
+func convertEnvsToConfigEnvs(envs []Env) []configv1alpha1.EnvVar {
+	var out []configv1alpha1.EnvVar
+	for _, e := range envs {
+		out = append(out, configv1alpha1.EnvVar{Name: e.Key, Value: e.Value})
+	}
+	return out
+}
+
 // newCRForConfig returns CR object for Config
 func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *configv1alpha1.TFConfig {
 	replicas := make(map[string]*int32)
 	image := make(map[string]string)
 	ports := make(map[string][]configv1alpha1.Port)
+	envs := make(map[string][]configv1alpha1.EnvVar)
 
 	// API
 	if &cr.Spec.TFConfig.APISpec != nil {
@@ -59,6 +68,9 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		}
 		if ports["api"] = convertPortsToConfigPorts(defaults.Get("tf-config-api").Services); len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
 			ports["api"] = cr.Spec.TFConfig.APISpec.Ports
+		}
+		if envs["api"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-api").Envs); len(cr.Spec.TFConfig.APISpec.EnvList) > 0 {
+			envs["api"] = cr.Spec.TFConfig.APISpec.EnvList
 		}
 	}
 	// SVC monitor
@@ -72,6 +84,9 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		if ports["svc-monitor"] = convertPortsToConfigPorts(defaults.Get("tf-config-svc-monitor").Services); len(cr.Spec.TFConfig.SVCMonitorSpec.Ports) > 0 {
 			ports["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Ports
 		}
+		if envs["svc-monitor"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-svc-monitor").Envs); len(cr.Spec.TFConfig.SVCMonitorSpec.EnvList) > 0 {
+			envs["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.EnvList
+		}
 	}
 	// Schema
 	if &cr.Spec.TFConfig.SchemaSpec != nil {
@@ -80,6 +95,9 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		}
 		if image["schema"] = defaults.Get("tf-config-schema").Image; len(cr.Spec.TFConfig.SchemaSpec.Image) > 0 {
 			image["schema"] = cr.Spec.TFConfig.SchemaSpec.Image
+		}
+		if envs["schema"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-schema").Envs); len(cr.Spec.TFConfig.SchemaSpec.EnvList) > 0 {
+			envs["schema"] = cr.Spec.TFConfig.SchemaSpec.EnvList
 		}
 	}
 	// Device mgr
@@ -93,6 +111,9 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		if ports["devicemgr"] = convertPortsToConfigPorts(defaults.Get("tf-config-devicemgr").Services); len(cr.Spec.TFConfig.DeviceMgrSpec.Ports) > 0 {
 			ports["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Ports
 		}
+		if envs["devicemgr"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-devicemgr").Envs); len(cr.Spec.TFConfig.DeviceMgrSpec.EnvList) > 0 {
+			envs["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.EnvList
+		}
 	}
 
 	return &configv1alpha1.TFConfig{
@@ -105,12 +126,13 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 			Namespace: cr.Namespace,
 		},
 		Spec: configv1alpha1.TFConfigSpec{
-			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap"},
+			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap", "tf-cassandra-config-cfgmap"},
 			APISpec: configv1alpha1.TFConfigAPISpec{
 				Enabled:  true,
 				Replicas: replicas["api"],
 				Image:    image["api"],
 				Ports:    ports["api"],
+				EnvList:  envs["api"],
 			},
 			SVCMonitorSpec: configv1alpha1.TFConfigSVCMonitorSpec{
 				Enabled:  true,
@@ -163,16 +185,16 @@ func getConfigMapForZookeeper(cr *operatorv1alpha1.TFOperator, defaults *Entitie
 	}
 }
 
-func getConfigMapForCassandraConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *corev1.ConfigMap {
+func getConfigMapForCassandra(cr *operatorv1alpha1.TFOperator, defaults *Entities) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "tf-rabbitmq-cfgmap",
+			Name:      "tf-cassandra-config-cfgmap",
 			Namespace: cr.Namespace,
 		},
 		Data: map[string]string{
-			"RABBITMQ_NODES":     defaults.Get("rabbitmq").Services[0].Name,
-			"RABBITMQ_NODE_PORT": fmt.Sprintf("%d", defaults.Get("rabbitmq").Services[0].Ports[0].Port),
-			"RABBITMQ_SERVERS":   fmt.Sprintf("%s:%d", defaults.Get("rabbitmq").Services[0].Name, defaults.Get("rabbitmq").Services[0].Ports[0].Port),
+			"CONFIGDB_NODES":     defaults.Get("cassandra-config").Services[0].Name,
+			"CASSANDRA_CQL_PORT": fmt.Sprintf("%d", defaults.Get("cassandra-config").Services[0].Ports[0].Port),
+			"CASSANDRA_PORT":     fmt.Sprintf("%d", defaults.Get("cassandra-config").Services[0].Ports[1].Port),
 		},
 	}
 }

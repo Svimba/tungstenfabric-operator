@@ -112,6 +112,11 @@ func (in *TFConfigDeviceMgrSpec) DeepCopyInto(out *TFConfigDeviceMgrSpec) {
 		*out = make([]Port, len(*in))
 		copy(*out, *in)
 	}
+	if in.EnvList != nil {
+		in, out := &in.EnvList, &out.EnvList
+		*out = make([]EnvVar, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -171,6 +176,11 @@ func (in *TFConfigSVCMonitorSpec) DeepCopyInto(out *TFConfigSVCMonitorSpec) {
 		*out = make([]Port, len(*in))
 		copy(*out, *in)
 	}
+	if in.EnvList != nil {
+		in, out := &in.EnvList, &out.EnvList
+		*out = make([]EnvVar, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -191,6 +201,11 @@ func (in *TFConfigSchemaSpec) DeepCopyInto(out *TFConfigSchemaSpec) {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int32)
 		**out = **in
+	}
+	if in.EnvList != nil {
+		in, out := &in.EnvList, &out.EnvList
+		*out = make([]EnvVar, len(*in))
+		copy(*out, *in)
 	}
 	return
 }

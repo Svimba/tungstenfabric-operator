@@ -30,25 +30,28 @@ type TFConfigAPISpec struct {
 
 // TFConfigSVCMonitorSpec defines the desired state of config service monitor
 type TFConfigSVCMonitorSpec struct {
-	Enabled  bool   `json:"enabled,omitempty"`
-	Replicas *int32 `json:"replicas"`
-	Image    string `json:"image"`
-	Ports    []Port `json:"ports,omitempty"`
+	Enabled  bool     `json:"enabled,omitempty"`
+	Replicas *int32   `json:"replicas"`
+	Image    string   `json:"image"`
+	Ports    []Port   `json:"ports,omitempty"`
+	EnvList  []EnvVar `json:"env"`
 }
 
 // TFConfigSchemaSpec defines the desired state of config schema
 type TFConfigSchemaSpec struct {
-	Enabled  bool   `json:"enabled,omitempty"`
-	Replicas *int32 `json:"replicas"`
-	Image    string `json:"image"`
+	Enabled  bool     `json:"enabled,omitempty"`
+	Replicas *int32   `json:"replicas"`
+	Image    string   `json:"image"`
+	EnvList  []EnvVar `json:"env"`
 }
 
 // TFConfigDeviceMgrSpec defines the desired state of config device manager
 type TFConfigDeviceMgrSpec struct {
-	Enabled  bool   `json:"enabled,omitempty"`
-	Replicas *int32 `json:"replicas"`
-	Image    string `json:"image"`
-	Ports    []Port `json:"ports,omitempty"`
+	Enabled  bool     `json:"enabled,omitempty"`
+	Replicas *int32   `json:"replicas"`
+	Image    string   `json:"image"`
+	Ports    []Port   `json:"ports,omitempty"`
+	EnvList  []EnvVar `json:"env"`
 }
 
 // TFConfigSpec defines the desired state of TFConfig
