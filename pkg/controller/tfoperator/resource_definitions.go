@@ -188,13 +188,16 @@ func getConfigMapForZookeeper(cr *operatorv1alpha1.TFOperator, defaults *Entitie
 func getConfigMapForCassandra(cr *operatorv1alpha1.TFOperator, defaults *Entities) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "tf-cassandra-config-cfgmap",
+			Name:      "tf-cassandra-cfgmap",
 			Namespace: cr.Namespace,
 		},
 		Data: map[string]string{
-			"CONFIGDB_NODES":     defaults.Get("cassandra-config").Services[0].Name,
-			"CASSANDRA_CQL_PORT": fmt.Sprintf("%d", defaults.Get("cassandra-config").Services[0].Ports[0].Port),
-			"CASSANDRA_PORT":     fmt.Sprintf("%d", defaults.Get("cassandra-config").Services[0].Ports[1].Port),
+			"CONFIGDB_NODES":          defaults.Get("cassandra-config").Services[0].Name,
+			"CASSANDRA_CQL_PORT":      fmt.Sprintf("%d", defaults.Get("cassandra-config").Services[0].Ports[0].Port),
+			"CASSANDRA_PORT":          fmt.Sprintf("%d", defaults.Get("cassandra-config").Services[0].Ports[1].Port),
+			"ANALYTICSDB_CQL_SERVERS": fmt.Sprintf("%s:%d", defaults.Get("cassandra-analytics").Services[0].Name, defaults.Get("cassandra-analytics").Services[0].Ports[0].Port),
+			"ANALYTICSDB_CQL_PORT":    fmt.Sprintf("%d", defaults.Get("cassandra-analytics").Services[0].Ports[0].Port),
+			"ANALYTICSDB_PORT":        fmt.Sprintf("%d", defaults.Get("cassandra-analytics").Services[0].Ports[1].Port),
 		},
 	}
 }

@@ -32,6 +32,8 @@ cassandra-analytics:
       ports:
         - name: cql
           port: 9042
+        - name: trift
+          port: 9160
 zookeeper:
   domain_name: zookeeper
   size: 3

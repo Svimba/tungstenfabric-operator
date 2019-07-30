@@ -2,7 +2,6 @@ package tfoperator
 
 import (
 	"context"
-	"fmt"
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -64,32 +63,41 @@ func (r *ReconcileTFOperator) handleConfigOperator() (bool, error) {
 
 }
 
+// CfgMapHandler is structure of handlers function
+type CfgMapHandler struct {
+	Name   string
+	CfgMap *corev1.ConfigMap
+}
+
 // ConfigMaps handler, prepare global configmaps for TF
 // return true/false(Requeue), error
 func (r *ReconcileTFOperator) handleConfigMaps() (bool, error) {
+	var handlerList []CfgMapHandler
+	handlerList = append(handlerList, CfgMapHandler{Name: "tf-zookeeper-cfgmap", CfgMap: getConfigMapForZookeeper(r.instance, r.defaults)})
+	handlerList = append(handlerList, CfgMapHandler{Name: "tf-rabbitmq-cfgmap", CfgMap: getConfigMapForRabbitMQ(r.instance, r.defaults)})
+	handlerList = append(handlerList, CfgMapHandler{Name: "tf-cassandra-cfgmap", CfgMap: getConfigMapForCassandra(r.instance, r.defaults)})
 
-	r.reqLogger.Info(fmt.Sprintf("ZOOKEEPER PORTS: %v", r.defaults.Get("zookeeper").Services[0].Ports[0].Port))
-	// Define a new ConfigMap object
-	configMap := getConfigMapForRabbitMQ(r.instance, r.defaults)
-	// Set TFOperator instance as the owner and controller
-	r.reqLogger.Info(fmt.Sprintf("RabbitMQ CFGMAP: %s", configMap))
-	if err := controllerutil.SetControllerReference(r.instance, configMap, r.scheme); err != nil {
-		return false, err
-	}
-	// Check if this Config CRD already exists
-	foundConfigMap := &corev1.ConfigMap{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, foundConfigMap)
-	if err != nil && errors.IsNotFound(err) {
-		r.reqLogger.Info("Creating a new Config Map for RabbitMQ", "Namespace", configMap.Namespace, "Name", configMap.Name)
-		err = r.client.Create(context.TODO(), configMap)
-		if err != nil {
+	for _, hdl := range handlerList {
+
+		r.reqLogger.Info("Checking: ", hdl.Name, "cfgmap")
+		if err := controllerutil.SetControllerReference(r.instance, hdl.CfgMap, r.scheme); err != nil {
 			return false, err
 		}
-		// ConfigMap has been created successfully - don't requeue
-	} else if err != nil {
-		return false, err
+		// Check if this Config CRD already exists
+		foundConfigMap := &corev1.ConfigMap{}
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: hdl.CfgMap.Name, Namespace: hdl.CfgMap.Namespace}, foundConfigMap)
+		if err != nil && errors.IsNotFound(err) {
+			r.reqLogger.Info("Creating a new Config Map for ", hdl.Name, "Namespace", hdl.CfgMap.Namespace, "Name", hdl.CfgMap.Name)
+			err = r.client.Create(context.TODO(), hdl.CfgMap)
+			if err != nil {
+				return false, err
+			}
+			// ConfigMap has been created successfully - don't requeue
+		} else if err != nil {
+			return false, err
+		}
+		// ConfigMap already exists - don't requeue
+		r.reqLogger.Info("Skip reconcile: ConfigMap for ", hdl.Name, " already exists", "Namespace", foundConfigMap.Namespace, "Name", foundConfigMap.Name)
 	}
-	// ConfigMap already exists - don't requeue
-	r.reqLogger.Info("Skip reconcile: ConfigMap for RabbitMQ already exists", "Namespace", foundConfigMap.Namespace, "Name", foundConfigMap.Name)
 	return false, nil
 }
