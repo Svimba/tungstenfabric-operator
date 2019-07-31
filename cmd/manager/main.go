@@ -93,8 +93,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Define TFConfig CRD if doesn't exist
 	clientset, err := apiextensionsclient.NewForConfig(cfg)
+	// Define TFConfig CRD if doesn't exist
 	crdConfig, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get("tfconfigs.config.tf.mirantis.com", metav1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {
 		log.Info(fmt.Sprintf("Please create CRD TFConfig"))
@@ -112,6 +112,26 @@ func main() {
 	}
 	if crdConfig != nil {
 		log.Info(fmt.Sprintf("%+v", crdConfig.Name))
+	}
+
+	// Define TFControl CRD if doesn't exist
+	crdControl, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get("tfcontrols.control.tf.mirantis.com", metav1.GetOptions{})
+	if err != nil && errors.IsNotFound(err) {
+		log.Info(fmt.Sprintf("Please create CRD TFControl"))
+		newCRD := newCRDForControl()
+		result, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newCRD)
+		if err != nil {
+			log.Error(err, "")
+			os.Exit(1)
+		}
+		log.Info(fmt.Sprintf("Created deployment %q.\n", result.GetObjectMeta().GetName()))
+
+	} else if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+	if crdControl != nil {
+		log.Info(fmt.Sprintf("%+v", crdControl.Name))
 	}
 
 	mgr, err := manager.New(cfg, manager.Options{

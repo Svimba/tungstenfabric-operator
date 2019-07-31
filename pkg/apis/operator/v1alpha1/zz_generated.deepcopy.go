@@ -6,6 +6,7 @@ package v1alpha1
 
 import (
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
+	controlv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -108,6 +109,11 @@ func (in *TFOperatorSpec) DeepCopyInto(out *TFOperatorSpec) {
 	if in.TFConfig != nil {
 		in, out := &in.TFConfig, &out.TFConfig
 		*out = new(configv1alpha1.TFConfigSpec)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.TFControl != nil {
+		in, out := &in.TFControl, &out.TFControl
+		*out = new(controlv1alpha1.TFControlSpec)
 		(*in).DeepCopyInto(*out)
 	}
 	return

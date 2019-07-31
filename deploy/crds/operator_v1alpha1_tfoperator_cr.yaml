@@ -33,3 +33,15 @@ spec:
       ports:
         - name: introspect
           port: 8087
+  tf-control:
+    control:
+      replicas: 1
+      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-control-control:5.1-4.15.0-54-generic
+
+    named:
+      replicas: 1
+      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-control-named:5.1-4.15.0-54-generic
+
+    dns:
+      replicas: 1
+      image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-control-dns:5.1-4.15.0-54-generic
