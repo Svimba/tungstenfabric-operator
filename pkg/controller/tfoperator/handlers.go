@@ -7,37 +7,35 @@ import (
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	extbetav1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+func (r *ReconcileTFOperator) updateSpec(newSpec *configv1alpha1.TFConfigSpec, curSpec *configv1alpha1.TFConfigSpec) bool {
+	changed := false
+	if !reflect.DeepEqual(newSpec.APISpec.EnvList, curSpec.APISpec.EnvList) {
+		curSpec.APISpec.EnvList = newSpec.APISpec.EnvList
+		changed = true
+	}
+	if !reflect.DeepEqual(newSpec.SVCMonitorSpec.EnvList, curSpec.SVCMonitorSpec.EnvList) {
+		curSpec.SVCMonitorSpec.EnvList = newSpec.SVCMonitorSpec.EnvList
+		changed = true
+	}
+	if !reflect.DeepEqual(newSpec.SchemaSpec.EnvList, curSpec.SchemaSpec.EnvList) {
+		curSpec.SchemaSpec.EnvList = newSpec.SchemaSpec.EnvList
+		changed = true
+	}
+	if !reflect.DeepEqual(newSpec.DeviceMgrSpec.EnvList, curSpec.DeviceMgrSpec.EnvList) {
+		curSpec.DeviceMgrSpec.EnvList = newSpec.DeviceMgrSpec.EnvList
+		changed = true
+	}
+	return changed
+}
+
 // Config Operator handler
 // return true/false(Requeue), error
 func (r *ReconcileTFOperator) handleConfigOperator() (bool, error) {
-	// Define a new Config CRD object
-	crdConfig := newCRDForConfig(r.instance)
-	// Set TFOperator instance as the owner and controller
-	if err := controllerutil.SetControllerReference(r.instance, crdConfig, r.scheme); err != nil {
-		return false, err
-	}
-	// Check if this Config CRD already exists
-	foundCRDConfig := &extbetav1.CustomResourceDefinition{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: crdConfig.Name, Namespace: crdConfig.Namespace}, foundCRDConfig)
-	if err != nil && errors.IsNotFound(err) {
-		r.reqLogger.Info("Creating a new Config CRD", "Deploy.Namespace", crdConfig.Namespace, "Deploy.Name", crdConfig.Name)
-		err = r.client.Create(context.TODO(), crdConfig)
-		if err != nil {
-			return false, err
-		}
-		// CRD has been created successfully - don't requeue
-	} else if err != nil {
-		return false, err
-	}
-	// Config CRD already exists - don't requeue
-	r.reqLogger.Info("Skip reconcile: Config CRD already exists", "Deploy.Namespace", foundCRDConfig.Namespace, "Deploy.Name", foundCRDConfig.Name)
-
 	// Define a new CR for Config Operator object
 	crConfig := newCRForConfig(r.instance, r.defaults)
 	// Set TFOperator instance as the owner and controller
@@ -46,7 +44,7 @@ func (r *ReconcileTFOperator) handleConfigOperator() (bool, error) {
 	}
 	// Check if this CR for Config Operator already exists
 	foundCRConfig := &configv1alpha1.TFConfig{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: crConfig.Name, Namespace: crConfig.Namespace}, foundCRConfig)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: crConfig.Name, Namespace: crConfig.Namespace}, foundCRConfig)
 	if err != nil && errors.IsNotFound(err) {
 		r.reqLogger.Info("Creating a new CR for Config Operator", "Deploy.Namespace", crConfig.Namespace, "Deploy.Name", crConfig.Name)
 		err = r.client.Create(context.TODO(), crConfig)
@@ -57,12 +55,20 @@ func (r *ReconcileTFOperator) handleConfigOperator() (bool, error) {
 		return false, nil
 	} else if err != nil {
 		return false, err
+	} else {
+		// Update envs if needed
+		if r.updateSpec(&crConfig.Spec, &foundCRConfig.Spec) {
+			r.reqLogger.Info(fmt.Sprintf("Updating CR for TFConfig"))
+			err = r.client.Update(context.TODO(), foundCRConfig)
+			if err != nil {
+				r.reqLogger.Error(err, fmt.Sprintf("Cannot update CR for TFConfig"))
+				return false, err
+			}
+		}
 	}
 	// CR for Config Operator already exists - don't requeue
-	r.reqLogger.Info("Skip reconcile: CR for Config Operator already exists", "Deploy.Namespace", foundCRConfig.Namespace, "Deploy.Name", foundCRConfig.Name)
-
+	r.reqLogger.Info("CR for Config Operator already exists and looks updated", "Deploy.Name", foundCRConfig.Name)
 	return false, nil
-
 }
 
 // CfgMapHandler is structure of handlers function
@@ -71,9 +77,12 @@ type CfgMapHandler struct {
 	CfgMap *corev1.ConfigMap
 }
 
-func (r *ReconcileTFOperator) compareConfigMaps(newcm *corev1.ConfigMap, curcm *corev1.ConfigMap) bool {
-	r.reqLogger.Info(fmt.Sprintf("Comparing: %v <<<>>> %v", newcm.Data, curcm.Data))
-	return reflect.DeepEqual(newcm.Data, curcm.Data)
+func (r *ReconcileTFOperator) updateConfigMaps(newcm *corev1.ConfigMap, curcm *corev1.ConfigMap) bool {
+	if !reflect.DeepEqual(newcm.Data, curcm.Data) {
+		curcm.Data = newcm.Data
+		return true
+	}
+	return false
 }
 
 // ConfigMaps handler, prepare global configmaps for TF
@@ -105,12 +114,9 @@ func (r *ReconcileTFOperator) handleConfigMaps() (bool, error) {
 		} else {
 			// ConfigMap already exists - check if is updated
 			r.reqLogger.Info(fmt.Sprintf("Skip reconcile: ConfigMap for %s already exists Name %s", hdl.Name, foundConfigMap.Name))
-			updated := r.compareConfigMaps(hdl.CfgMap, foundConfigMap)
-			r.reqLogger.Info(fmt.Sprintf("Checking ConfigMap is updated: %t", updated))
-			if !updated {
+			if r.updateConfigMaps(hdl.CfgMap, foundConfigMap) {
 				r.reqLogger.Info(fmt.Sprintf("Updating ConfigMap %s", hdl.Name))
 
-				foundConfigMap.Data = hdl.CfgMap.Data
 				err = r.client.Update(context.TODO(), foundConfigMap)
 				if err != nil {
 					r.reqLogger.Error(err, fmt.Sprintf("Cannot update ConfigMap %s", hdl.Name))

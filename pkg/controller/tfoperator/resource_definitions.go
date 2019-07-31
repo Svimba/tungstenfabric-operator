@@ -6,32 +6,8 @@ import (
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	operatorv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	extbetav1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// newCRDForConfig returns CustomResourceDefinition object for TF-Config operator
-func newCRDForConfig(cr *operatorv1alpha1.TFOperator) *extbetav1.CustomResourceDefinition {
-	return &extbetav1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "tfconfigs.config.tf.mirantis.com",
-		},
-		Spec: extbetav1.CustomResourceDefinitionSpec{
-			Group: "config.tf.mirantis.com",
-			Names: extbetav1.CustomResourceDefinitionNames{
-				Kind:     "TFConfig",
-				ListKind: "TFConfigList",
-				Plural:   "tfconfigs",
-				Singular: "tfconfig",
-			},
-			Scope:   "Namespaced",
-			Version: "v1alpha1",
-			Subresources: &extbetav1.CustomResourceSubresources{
-				Status: &extbetav1.CustomResourceSubresourceStatus{},
-			},
-		},
-	}
-}
 
 func convertPortsToConfigPorts(svc []Service) []configv1alpha1.Port {
 	var out []configv1alpha1.Port
@@ -126,7 +102,7 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 			Namespace: cr.Namespace,
 		},
 		Spec: configv1alpha1.TFConfigSpec{
-			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap", "tf-cassandra-config-cfgmap"},
+			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap", "tf-cassandra-cfgmap"},
 			APISpec: configv1alpha1.TFConfigAPISpec{
 				Enabled:  true,
 				Replicas: replicas["api"],
