@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
+	controlv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -71,6 +72,57 @@ func (r *ReconcileTFOperator) handleConfigOperator() (bool, error) {
 	return false, nil
 }
 
+// Control Operator handler
+// return true/false(Requeue), error
+func (r *ReconcileTFOperator) handleControlOperator() (bool, error) {
+	// Define a new Control CRD object
+	crdControl := newCRDForControl(r.instance)
+	// Set TFOperator instance as the owner and controller
+	if err := controllerutil.SetControllerReference(r.instance, crdControl, r.scheme); err != nil {
+		return false, err
+	}
+	// Check if this Control CRD already exists
+	foundCRDControl := &extbetav1.CustomResourceDefinition{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: crdControl.Name, Namespace: crdControl.Namespace}, foundCRDControl)
+	if err != nil && errors.IsNotFound(err) {
+		r.reqLogger.Info("Creating a new Control CRD", "Deploy.Namespace", crdControl.Namespace, "Deploy.Name", crdControl.Name)
+		err = r.client.Create(context.TODO(), crdControl)
+		if err != nil {
+			return false, err
+		}
+		// CRD has been created successfully - don't requeue
+	} else if err != nil {
+		return false, err
+	}
+	// Control CRD already exists - don't requeue
+	r.reqLogger.Info("Skip reconcile: Control CRD already exists", "Deploy.Namespace", foundCRDControl.Namespace, "Deploy.Name", foundCRDControl.Name)
+
+	// Define a new CR for Control Operator object
+	crControl := newCRForControl(r.instance, r.defaults)
+	// Set TFOperator instance as the owner and controller
+	if err := controllerutil.SetControllerReference(r.instance, crControl, r.scheme); err != nil {
+		return false, err
+	}
+	// Check if this CR for Control Operator already exists
+	foundCRControl := &controlv1alpha1.TFControl{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: crControl.Name, Namespace: crControl.Namespace}, foundCRControl)
+	if err != nil && errors.IsNotFound(err) {
+		r.reqLogger.Info("Creating a new CR for Control Operator", "Deploy.Namespace", crControl.Namespace, "Deploy.Name", crControl.Name)
+		err = r.client.Create(context.TODO(), crControl)
+		if err != nil {
+			return false, err
+		}
+		// CR has been created successfully - don't requeue
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	// CR for Control Operator already exists - don't requeue
+	r.reqLogger.Info("Skip reconcile: CR for Control Operator already exists", "Deploy.Namespace", foundCRControl.Namespace, "Deploy.Name", foundCRControl.Name)
+
+	return false, nil
+
+}
 // CfgMapHandler is structure of handlers function
 type CfgMapHandler struct {
 	Name   string

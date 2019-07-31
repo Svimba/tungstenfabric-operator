@@ -62,6 +62,7 @@ rules:
   - create
 - apiGroups:
   - config.tf.mirantis.com
+  - control.tf.mirantis.com
   - operator.tf.mirantis.com
   resources:
   - '*'

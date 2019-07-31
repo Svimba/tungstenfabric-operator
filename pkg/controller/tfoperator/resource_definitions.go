@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
+	controlv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1"
 	operatorv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,6 +127,110 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 				Replicas: replicas["devicemgr"],
 				Image:    image["devicemgr"],
 				Ports:    ports["devicemgr"],
+			},
+		},
+	}
+}
+
+// newCRDForControl returns CustomResourceDefinition object for TF-Control operator
+func newCRDForControl(cr *operatorv1alpha1.TFOperator) *extbetav1.CustomResourceDefinition {
+	return &extbetav1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "tfcontrols.control.tf.mirantis.com",
+		},
+		Spec: extbetav1.CustomResourceDefinitionSpec{
+			Group: "control.tf.mirantis.com",
+			Names: extbetav1.CustomResourceDefinitionNames{
+				Kind:     "TFControl",
+				ListKind: "TFControlList",
+				Plural:   "tfcontrols",
+				Singular: "tfcontrol",
+			},
+			Scope:   "Namespaced",
+			Version: "v1alpha1",
+			Subresources: &extbetav1.CustomResourceSubresources{
+				Status: &extbetav1.CustomResourceSubresourceStatus{},
+			},
+		},
+	}
+}
+
+func convertPortsToControlPorts(svc []Service) []controlv1alpha1.Port {
+	var out []controlv1alpha1.Port
+	for _, s := range svc {
+		for _, p := range s.Ports {
+			out = append(out, controlv1alpha1.Port{Name: p.Name, Port: p.Port})
+		}
+	}
+	return out
+}
+
+func convertEnvsToControlEnvs(envs []Env) []controlv1alpha1.EnvVar {
+	var out []controlv1alpha1.EnvVar
+	for _, e := range envs {
+		out = append(out, controlv1alpha1.EnvVar{Name: e.Key, Value: e.Value})
+	}
+	return out
+}
+
+// newCRForControl returns CR object for Control
+func newCRForControl(cr *operatorv1alpha1.TFOperator, defaults *Entities) *controlv1alpha1.TFControl {
+	replicas := make(map[string]*int32)
+	image := make(map[string]string)
+
+	// Control
+	if &cr.Spec.TFControl.ControlSpec != nil {
+		if replicas["control"] = &defaults.Get("tf-control-control").Size; cr.Spec.TFControl.ControlSpec.Replicas != nil {
+			replicas["contrrol"] = cr.Spec.TFControl.ControlSpec.Replicas
+		}
+		if image["control"] = defaults.Get("tf-control-control").Image; len(cr.Spec.TFControl.ControlSpec.Image) > 0 {
+			image["control"] = cr.Spec.TFControl.ControlSpec.Image
+		}
+	}
+	// Named
+	if &cr.Spec.TFControl.NamedSpec != nil {
+		if replicas["named"] = &defaults.Get("tf-control-named").Size; cr.Spec.TFControl.NamedSpec.Replicas != nil {
+			replicas["named"] = cr.Spec.TFControl.NamedSpec.Replicas
+		}
+		if image["named"] = defaults.Get("tf-control-named").Image; len(cr.Spec.TFControl.NamedSpec.Image) > 0 {
+			image["named"] = cr.Spec.TFControl.NamedSpec.Image
+		}
+	}
+	// Dns
+	if &cr.Spec.TFControl.DnsSpec != nil {
+		if replicas["dns"] = &defaults.Get("tf-control-dns").Size; cr.Spec.TFControl.DnsSpec.Replicas != nil {
+			replicas["dns"] = cr.Spec.TFControl.DnsSpec.Replicas
+		}
+		if image["dns"] = defaults.Get("tf-control-dns").Image; len(cr.Spec.TFControl.DnsSpec.Image) > 0 {
+			image["dns"] = cr.Spec.TFControl.DnsSpec.Image
+		}
+	}
+
+	return &controlv1alpha1.TFControl{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "TFControl",
+			APIVersion: "control.tf.mirantis.com/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tf-control",
+			Namespace: cr.Namespace,
+		},
+		Spec: controlv1alpha1.TFControlSpec{
+			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap", "tf-cassandra-config-cfgmap"},
+			ControlSpec: controlv1alpha1.TFControlControlSpec{
+				Enabled:  true,
+				Replicas: replicas["control"],
+				Image:    image["control"],
+			},
+			NamedSpec: controlv1alpha1.TFControlNamedSpec{
+				Enabled:  true,
+				Replicas: replicas["named"],
+				Image:    image["named"],
+			},
+			DnsSpec: controlv1alpha1.TFControlDnsSpec{
+				Enabled:  true,
+				Replicas: replicas["dns"],
+				Image:    image["dns"],
 			},
 		},
 	}
