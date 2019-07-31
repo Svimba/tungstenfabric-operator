@@ -119,7 +119,7 @@ func (r *ReconcileTFOperator) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
-	requeue, err := r.handleConfigOperator()
+	requeue, err := r.handleConfigMaps()
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -127,7 +127,7 @@ func (r *ReconcileTFOperator) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	requeue, err = r.handleConfigMaps()
+	requeue, err = r.handleConfigOperator()
 	if err != nil {
 		return reconcile.Result{}, err
 	}
