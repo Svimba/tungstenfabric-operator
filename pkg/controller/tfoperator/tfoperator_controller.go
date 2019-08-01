@@ -129,6 +129,7 @@ func (r *ReconcileTFOperator) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
+	// ConfigMaps
 	requeue, err := r.handleConfigMaps()
 	if err != nil {
 		return reconcile.Result{}, err
@@ -137,21 +138,34 @@ func (r *ReconcileTFOperator) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	requeue, err = r.handleConfigOperator()
-	if err != nil {
+	// TFConfig
+	if r.instance.Spec.TFConfig != nil {
+		requeue, err = r.handleConfigOperator()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if requeue {
+			return reconcile.Result{Requeue: true}, nil
+		}
+	} else {
+		err = fmt.Errorf("Section of definition for TFConfig missing in TFOperator CR yaml file")
+		r.reqLogger.Error(err, "Please add tf-config section")
 		return reconcile.Result{}, err
 	}
-	if requeue {
-		return reconcile.Result{Requeue: true}, nil
-	}
 
-	requeue, err = r.handleControlOperator()
-	if err != nil {
+	// TFControl
+	if r.instance.Spec.TFControl != nil {
+		requeue, err = r.handleControlOperator()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if requeue {
+			return reconcile.Result{Requeue: true}, nil
+		}
+	} else {
+		err = fmt.Errorf("Section of definition for TFControl missing in TFOperator CR yaml file")
+		r.reqLogger.Error(err, "Please add tf-control section")
 		return reconcile.Result{}, err
 	}
-	if requeue {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
 	return reconcile.Result{}, nil
 }

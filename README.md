@@ -6,11 +6,10 @@ Still under construction.
 
 ## Currently can handle:
 
-- config-operator
+- config-operator (TFConfig)
+- control-operator (TFControl)
 
 
 ## TODO:
-- implement control
 - implement analytics
 - implement 3rd party operators (Cassandra, Zookeeper, Redis ...)
-- extend for ConfigMap generator with default values.

@@ -132,29 +132,6 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 	}
 }
 
-// newCRDForControl returns CustomResourceDefinition object for TF-Control operator
-func newCRDForControl(cr *operatorv1alpha1.TFOperator) *extbetav1.CustomResourceDefinition {
-	return &extbetav1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "tfcontrols.control.tf.mirantis.com",
-		},
-		Spec: extbetav1.CustomResourceDefinitionSpec{
-			Group: "control.tf.mirantis.com",
-			Names: extbetav1.CustomResourceDefinitionNames{
-				Kind:     "TFControl",
-				ListKind: "TFControlList",
-				Plural:   "tfcontrols",
-				Singular: "tfcontrol",
-			},
-			Scope:   "Namespaced",
-			Version: "v1alpha1",
-			Subresources: &extbetav1.CustomResourceSubresources{
-				Status: &extbetav1.CustomResourceSubresourceStatus{},
-			},
-		},
-	}
-}
-
 func convertPortsToControlPorts(svc []Service) []controlv1alpha1.Port {
 	var out []controlv1alpha1.Port
 	for _, s := range svc {
