@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -13,10 +14,15 @@ type Port struct {
 	Port int32  `json:"port"`
 }
 
-// EnvVar defines Environment sariable
+// EnvVar defines Environment variable
 type EnvVar struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
+}
+
+// SecCtx defines Security Context fot Control services deployment
+type SecCtx struct {
+	Capabilities []corev1.Capability `json:"capabilities"`
 }
 
 // TFControlControlSpec defines the desired state of control service from TF Control group
@@ -30,10 +36,11 @@ type TFControlControlSpec struct {
 
 // TFControlNamedSpec defines the desired state of named service from TF Control group
 type TFControlNamedSpec struct {
-	Enabled  bool   `json:"enabled,omitempty"`
-	Replicas *int32 `json:"replicas"`
-	Image    string `json:"image"`
-	Ports    []Port `json:"ports,omitempty"`
+	Enabled         bool    `json:"enabled,omitempty"`
+	Replicas        *int32  `json:"replicas"`
+	Image           string  `json:"image"`
+	Ports           []Port  `json:"ports,omitempty"`
+	SecurityContext SecCtx  `json:"securityContext,omitempty"`
 }
 
 // TFControlDnsSpec defines the desired state of dns service from TF Control group

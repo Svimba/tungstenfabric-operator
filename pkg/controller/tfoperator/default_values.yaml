@@ -102,6 +102,10 @@ tf-control-named:
   domain_name: tf-control-named
   image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-controller-control-named:5.1-4.15.0-54-generic
   size: 1
+  securityContext:
+    capabilities:
+    - DAC_READ_SEARCH
+    - SYS_RESOURCE 
 
 #analytics
 tf-analytics-collector:

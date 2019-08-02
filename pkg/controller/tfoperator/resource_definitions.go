@@ -2,6 +2,7 @@ package tfoperator
 
 import (
 	"fmt"
+	"reflect"
 
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	controlv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1"
@@ -150,10 +151,21 @@ func convertEnvsToControlEnvs(envs []Env) []controlv1alpha1.EnvVar {
 	return out
 }
 
+func convertSCToControlSC(sc SecCtx) controlv1alpha1.SecCtx {
+	var out controlv1alpha1.SecCtx
+	var capabilities []corev1.Capability
+        for _, c := range sc.Capabilities {
+		capabilities = append(capabilities, corev1.Capability(c))
+	}
+	out.Capabilities = capabilities
+        return out 
+}
+
 // newCRForControl returns CR object for Control
 func newCRForControl(cr *operatorv1alpha1.TFOperator, defaults *Entities) *controlv1alpha1.TFControl {
 	replicas := make(map[string]*int32)
 	image := make(map[string]string)
+	secContexts := make(map[string]controlv1alpha1.SecCtx)
 
 	// Control
 	if &cr.Spec.TFControl.ControlSpec != nil {
@@ -171,6 +183,9 @@ func newCRForControl(cr *operatorv1alpha1.TFOperator, defaults *Entities) *contr
 		}
 		if image["named"] = defaults.Get("tf-control-named").Image; len(cr.Spec.TFControl.NamedSpec.Image) > 0 {
 			image["named"] = cr.Spec.TFControl.NamedSpec.Image
+		}
+		if secContexts["named"] = convertSCToControlSC(defaults.Get("tf-control-named").SecContext); !reflect.DeepEqual(controlv1alpha1.SecCtx{}, cr.Spec.TFControl.NamedSpec.SecurityContext) {
+			secContexts["named"] = cr.Spec.TFControl.NamedSpec.SecurityContext
 		}
 	}
 	// Dns
@@ -200,9 +215,10 @@ func newCRForControl(cr *operatorv1alpha1.TFOperator, defaults *Entities) *contr
 				Image:    image["control"],
 			},
 			NamedSpec: controlv1alpha1.TFControlNamedSpec{
-				Enabled:  true,
-				Replicas: replicas["named"],
-				Image:    image["named"],
+				Enabled:         true,
+				Replicas:        replicas["named"],
+				Image:           image["named"],
+				SecurityContext: secContexts["named"],
 			},
 			DnsSpec: controlv1alpha1.TFControlDnsSpec{
 				Enabled:  true,
