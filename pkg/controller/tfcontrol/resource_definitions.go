@@ -137,6 +137,11 @@ func newDeploymentForNamed(cr *controlv1alpha1.TFControl) *betav1.Deployment {
 						{
 							Name:  cr.Name + "-named",
 							Image: cr.Spec.NamedSpec.Image,
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities: &corev1.Capabilities{
+									Add: cr.Spec.NamedSpec.SecurityContext.Capabilities,
+								},
+							},
 						},
 					},
 				},
