@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	analyticsv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/analytics/v1alpha1"
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	controlv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1"
 	operatorv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1"
@@ -154,11 +155,11 @@ func convertEnvsToControlEnvs(envs []Env) []controlv1alpha1.EnvVar {
 func convertSCToControlSC(sc SecCtx) controlv1alpha1.SecCtx {
 	var out controlv1alpha1.SecCtx
 	var capabilities []corev1.Capability
-        for _, c := range sc.Capabilities {
+	for _, c := range sc.Capabilities {
 		capabilities = append(capabilities, corev1.Capability(c))
 	}
 	out.Capabilities = capabilities
-        return out 
+	return out
 }
 
 // newCRForControl returns CR object for Control
@@ -224,6 +225,113 @@ func newCRForControl(cr *operatorv1alpha1.TFOperator, defaults *Entities) *contr
 				Enabled:  true,
 				Replicas: replicas["dns"],
 				Image:    image["dns"],
+			},
+		},
+	}
+}
+
+// newCRForAnalytics returns CR object for Analytics
+func newCRForAnalytics(cr *operatorv1alpha1.TFOperator, defaults *Entities) *analyticsv1alpha1.TFAnalytics {
+	replicas := make(map[string]*int32)
+	image := make(map[string]string)
+
+	// Collector
+	if &cr.Spec.TFAnalytics.CollectorSpec != nil {
+		if replicas["collector"] = &defaults.Get("tf-analytics-collector").Size; cr.Spec.TFAnalytics.CollectorSpec.Replicas != nil {
+			replicas["contrrol"] = cr.Spec.TFAnalytics.CollectorSpec.Replicas
+		}
+		if image["collector"] = defaults.Get("tf-analytics-collector").Image; len(cr.Spec.TFAnalytics.CollectorSpec.Image) > 0 {
+			image["collector"] = cr.Spec.TFAnalytics.CollectorSpec.Image
+		}
+	}
+	// API
+	if &cr.Spec.TFAnalytics.APISpec != nil {
+		if replicas["api"] = &defaults.Get("tf-analytics-api").Size; cr.Spec.TFAnalytics.APISpec.Replicas != nil {
+			replicas["api"] = cr.Spec.TFAnalytics.APISpec.Replicas
+		}
+		if image["api"] = defaults.Get("tf-analytics-api").Image; len(cr.Spec.TFAnalytics.APISpec.Image) > 0 {
+			image["api"] = cr.Spec.TFAnalytics.APISpec.Image
+		}
+
+	}
+	// AlarmGen
+	if &cr.Spec.TFAnalytics.AlarmGenSpec != nil {
+		if replicas["alarm-gen"] = &defaults.Get("tf-analytics-alarm-gen").Size; cr.Spec.TFAnalytics.AlarmGenSpec.Replicas != nil {
+			replicas["alarm-gen"] = cr.Spec.TFAnalytics.AlarmGenSpec.Replicas
+		}
+		if image["alarm-gen"] = defaults.Get("tf-analytics-alarm-gen").Image; len(cr.Spec.TFAnalytics.AlarmGenSpec.Image) > 0 {
+			image["alarm-gen"] = cr.Spec.TFAnalytics.AlarmGenSpec.Image
+		}
+	}
+	// QueryEngine
+	if &cr.Spec.TFAnalytics.QueryEngine != nil {
+		if replicas["query-engine"] = &defaults.Get("tf-analytics-query-engine").Size; cr.Spec.TFAnalytics.QueryEngine.Replicas != nil {
+			replicas["query-engine"] = cr.Spec.TFAnalytics.QueryEngine.Replicas
+		}
+		if image["query-engine"] = defaults.Get("tf-analytics-query-engine").Image; len(cr.Spec.TFAnalytics.QueryEngine.Image) > 0 {
+			image["query-engine"] = cr.Spec.TFAnalytics.QueryEngine.Image
+		}
+	}
+	// SNMP
+	if &cr.Spec.TFAnalytics.SNMPSpec != nil {
+		if replicas["snmp"] = &defaults.Get("tf-analytics-snmp").Size; cr.Spec.TFAnalytics.SNMPSpec.Replicas != nil {
+			replicas["snmp"] = cr.Spec.TFAnalytics.SNMPSpec.Replicas
+		}
+		if image["snmp"] = defaults.Get("tf-analytics-snmp").Image; len(cr.Spec.TFAnalytics.SNMPSpec.Image) > 0 {
+			image["snmp"] = cr.Spec.TFAnalytics.SNMPSpec.Image
+		}
+	}
+
+	// Topology
+	if &cr.Spec.TFAnalytics.TopologySpec != nil {
+		if replicas["topology"] = &defaults.Get("tf-analytics-topology").Size; cr.Spec.TFAnalytics.TopologySpec.Replicas != nil {
+			replicas["topology"] = cr.Spec.TFAnalytics.TopologySpec.Replicas
+		}
+		if image["topology"] = defaults.Get("tf-analytics-topology").Image; len(cr.Spec.TFAnalytics.TopologySpec.Image) > 0 {
+			image["topology"] = cr.Spec.TFAnalytics.TopologySpec.Image
+		}
+	}
+
+	return &analyticsv1alpha1.TFAnalytics{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "TFAnalytics",
+			APIVersion: "analytics.tf.mirantis.com/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tf-analytics",
+			Namespace: cr.Namespace,
+		},
+		Spec: analyticsv1alpha1.TFAnalyticsSpec{
+			ConfigMapList: []string{"tf-rabbitmq-cfgmap", "tf-zookeeper-cfgmap", "tf-cassandra-config-cfgmap"},
+			AlarmGenSpec: analyticsv1alpha1.TFAnalyticsAlarmGenSpec{
+				Enabled:  true,
+				Replicas: replicas["alarm-gen"],
+				Image:    image["alarm-gen"],
+			},
+			APISpec: analyticsv1alpha1.TFAnalyticsAPISpec{
+				Enabled:  true,
+				Replicas: replicas["api"],
+				Image:    image["api"],
+			},
+			CollectorSpec: analyticsv1alpha1.TFAnalyticsCollectorSpec{
+				Enabled:  true,
+				Replicas: replicas["collector"],
+				Image:    image["collector"],
+			},
+			QueryEngine: analyticsv1alpha1.TFAnalyticsQueryEngineSpec{
+				Enabled:  true,
+				Replicas: replicas["query-engine"],
+				Image:    image["query-engine"],
+			},
+			SNMPSpec: analyticsv1alpha1.TFAnalyticsSNMPSpec{
+				Enabled:  true,
+				Replicas: replicas["snmp"],
+				Image:    image["snmp"],
+			},
+			TopologySpec: analyticsv1alpha1.TFAnalyticsTopologySpec{
+				Enabled:  true,
+				Replicas: replicas["topology"],
+				Image:    image["topology"],
 			},
 		},
 	}

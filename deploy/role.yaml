@@ -64,6 +64,7 @@ rules:
   - config.tf.mirantis.com
   - control.tf.mirantis.com
   - operator.tf.mirantis.com
+  - analytics.tf.mirantis.com
   resources:
   - '*'
   verbs:

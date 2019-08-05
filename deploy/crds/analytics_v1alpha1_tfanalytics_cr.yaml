@@ -1,0 +1,7 @@
+apiVersion: analytics.tf.mirantis.com/v1alpha1
+kind: TFAnalytics
+metadata:
+  name: example-tfanalytics
+spec:
+  # Add fields here
+  size: 3

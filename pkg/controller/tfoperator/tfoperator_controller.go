@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	analyticsv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/analytics/v1alpha1"
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	controlv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1"
 	operatorv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1"
@@ -89,14 +90,13 @@ type ReconcileTFOperator struct {
 	instance  *operatorv1alpha1.TFOperator
 	config    *configv1alpha1.TFConfig
 	control   *controlv1alpha1.TFControl
+	analytics *analyticsv1alpha1.TFAnalytics
 	reqLogger logr.Logger
 	defaults  *Entities
 }
 
 // Reconcile reads that state of the cluster for a TFOperator object and makes changes based on the state read
 // and what is in the TFOperator.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -167,5 +167,21 @@ func (r *ReconcileTFOperator) Reconcile(request reconcile.Request) (reconcile.Re
 		r.reqLogger.Error(err, "Please add tf-control section")
 		return reconcile.Result{}, err
 	}
+
+	// TFAnalytics
+	if r.instance.Spec.TFAnalytics != nil {
+		requeue, err = r.handleAnalyticsOperator()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if requeue {
+			return reconcile.Result{Requeue: true}, nil
+		}
+	} else {
+		err = fmt.Errorf("Section of definition for TFAnalytics missing in TFOperator CR yaml file")
+		r.reqLogger.Error(err, "Please add tf-analytics section")
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }

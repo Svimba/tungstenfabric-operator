@@ -11,9 +11,7 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1.TFConfig":       schema_pkg_apis_config_v1alpha1_TFConfig(ref),
-		"github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1.TFConfigSpec":   schema_pkg_apis_config_v1alpha1_TFConfigSpec(ref),
-		"github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1.TFConfigStatus": schema_pkg_apis_config_v1alpha1_TFConfigStatus(ref),
+		"github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1.TFConfig": schema_pkg_apis_config_v1alpha1_TFConfig(ref),
 	}
 }
 
@@ -57,29 +55,5 @@ func schema_pkg_apis_config_v1alpha1_TFConfig(ref common.ReferenceCallback) comm
 		},
 		Dependencies: []string{
 			"github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1.TFConfigSpec", "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1.TFConfigStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
-	}
-}
-
-func schema_pkg_apis_config_v1alpha1_TFConfigSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "TFConfigSpec defines the desired state of TFConfig",
-				Properties:  map[string]spec.Schema{},
-			},
-		},
-		Dependencies: []string{},
-	}
-}
-
-func schema_pkg_apis_config_v1alpha1_TFConfigStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "TFConfigStatus defines the observed state of TFConfig",
-				Properties:  map[string]spec.Schema{},
-			},
-		},
-		Dependencies: []string{},
 	}
 }

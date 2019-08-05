@@ -132,6 +132,26 @@ func main() {
 		log.Info(fmt.Sprintf("%+v", crdControl.Name))
 	}
 
+	// Define TFAnalytics CRD if doesn't exist
+	crdAnalytics, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get("tfanalytics.config.tf.mirantis.com", metav1.GetOptions{})
+	if err != nil && errors.IsNotFound(err) {
+		newCRD := newCRDForAnalytics()
+		result, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newCRD)
+		if err != nil {
+			log.Error(err, "")
+			os.Exit(1)
+		}
+		log.Info(fmt.Sprintf("Created CRD %q.\n", result.GetObjectMeta().GetName()))
+
+	} else if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+	if crdAnalytics != nil {
+		log.Info(fmt.Sprintf("%+v", crdAnalytics.Name))
+	}
+
+	// Create manager
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
 		MapperProvider:     restmapper.NewDynamicRESTMapper,

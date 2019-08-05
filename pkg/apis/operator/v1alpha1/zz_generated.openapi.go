@@ -11,9 +11,7 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1.TFOperator":       schema_pkg_apis_operator_v1alpha1_TFOperator(ref),
-		"github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1.TFOperatorSpec":   schema_pkg_apis_operator_v1alpha1_TFOperatorSpec(ref),
-		"github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1.TFOperatorStatus": schema_pkg_apis_operator_v1alpha1_TFOperatorStatus(ref),
+		"github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1.TFOperator": schema_pkg_apis_operator_v1alpha1_TFOperator(ref),
 	}
 }
 
@@ -57,29 +55,5 @@ func schema_pkg_apis_operator_v1alpha1_TFOperator(ref common.ReferenceCallback) 
 		},
 		Dependencies: []string{
 			"github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1.TFOperatorSpec", "github.com/Svimba/tungstenfabric-operator/pkg/apis/operator/v1alpha1.TFOperatorStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
-	}
-}
-
-func schema_pkg_apis_operator_v1alpha1_TFOperatorSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "TFOperatorSpec defines the desired state of TFOperator",
-				Properties:  map[string]spec.Schema{},
-			},
-		},
-		Dependencies: []string{},
-	}
-}
-
-func schema_pkg_apis_operator_v1alpha1_TFOperatorStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "TFOperatorStatus defines the observed state of TFOperator",
-				Properties:  map[string]spec.Schema{},
-			},
-		},
-		Dependencies: []string{},
 	}
 }

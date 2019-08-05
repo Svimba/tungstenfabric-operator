@@ -11,9 +11,7 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"./pkg/apis/control/v1alpha1.TFControl":       schema_pkg_apis_control_v1alpha1_TFControl(ref),
-		"./pkg/apis/control/v1alpha1.TFControlSpec":   schema_pkg_apis_control_v1alpha1_TFControlSpec(ref),
-		"./pkg/apis/control/v1alpha1.TFControlStatus": schema_pkg_apis_control_v1alpha1_TFControlStatus(ref),
+		"github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1.TFControl": schema_pkg_apis_control_v1alpha1_TFControl(ref),
 	}
 }
 
@@ -44,42 +42,18 @@ func schema_pkg_apis_control_v1alpha1_TFControl(ref common.ReferenceCallback) co
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/control/v1alpha1.TFControlSpec"),
+							Ref: ref("github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1.TFControlSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/control/v1alpha1.TFControlStatus"),
+							Ref: ref("github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1.TFControlStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/control/v1alpha1.TFControlSpec", "./pkg/apis/control/v1alpha1.TFControlStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
-	}
-}
-
-func schema_pkg_apis_control_v1alpha1_TFControlSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "TFControlSpec defines the desired state of TFControl",
-				Properties:  map[string]spec.Schema{},
-			},
-		},
-		Dependencies: []string{},
-	}
-}
-
-func schema_pkg_apis_control_v1alpha1_TFControlStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "TFControlStatus defines the observed state of TFControl",
-				Properties:  map[string]spec.Schema{},
-			},
-		},
-		Dependencies: []string{},
+			"github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1.TFControlSpec", "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1.TFControlStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }

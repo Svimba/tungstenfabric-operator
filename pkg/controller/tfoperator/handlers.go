@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	analyticsv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/analytics/v1alpha1"
 	configv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/config/v1alpha1"
 	controlv1alpha1 "github.com/Svimba/tungstenfabric-operator/pkg/apis/control/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -97,6 +98,36 @@ func (r *ReconcileTFOperator) handleControlOperator() (bool, error) {
 	}
 	// CR for Control Operator already exists - don't requeue
 	r.reqLogger.Info("Skip reconcile: CR for Control Operator already exists", "Deploy.Namespace", foundCRControl.Namespace, "Deploy.Name", foundCRControl.Name)
+
+	return false, nil
+
+}
+
+// Analytics Operator handler
+// return true/false(Requeue), error
+func (r *ReconcileTFOperator) handleAnalyticsOperator() (bool, error) {
+	// Define a new CR for Analytics Operator object
+	crAnalytics := newCRForAnalytics(r.instance, r.defaults)
+	// Set TFOperator instance as the owner and controller
+	if err := controllerutil.SetControllerReference(r.instance, crAnalytics, r.scheme); err != nil {
+		return false, err
+	}
+	// Check if this CR for Analytics Operator already exists
+	foundCRAnalytics := &analyticsv1alpha1.TFAnalytics{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: crAnalytics.Name, Namespace: crAnalytics.Namespace}, foundCRAnalytics)
+	if err != nil && errors.IsNotFound(err) {
+		r.reqLogger.Info("Creating a new CR for Analytics Operator", "Deploy.Namespace", crAnalytics.Namespace, "Deploy.Name", crAnalytics.Name)
+		err = r.client.Create(context.TODO(), crAnalytics)
+		if err != nil {
+			return false, err
+		}
+		// CR has been created successfully - don't requeue
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	// CR for Analytics Operator already exists - don't requeue
+	r.reqLogger.Info("Skip reconcile: CR for Analytics Operator already exists", "Deploy.Namespace", foundCRAnalytics.Namespace, "Deploy.Name", foundCRAnalytics.Name)
 
 	return false, nil
 

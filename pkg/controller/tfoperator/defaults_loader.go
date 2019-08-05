@@ -25,8 +25,9 @@ type Env struct {
 	Value string `yaml:"value"`
 }
 
+// SecCtx .
 type SecCtx struct {
-	Capabilities []string `yaml:"capabilities"` 
+	Capabilities []string `yaml:"capabilities"`
 }
 
 // Entity .
@@ -36,7 +37,7 @@ type Entity struct {
 	Services   []Service `yaml:"services"`
 	Envs       []Env     `yaml:"envs"`
 	Image      string    `yaml:"image"`
-	SecContext SecCtx    `yaml:"securityContext"`  
+	SecContext SecCtx    `yaml:"securityContext"`
 }
 
 // Entities .

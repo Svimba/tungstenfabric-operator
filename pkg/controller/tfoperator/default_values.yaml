@@ -110,9 +110,25 @@ tf-control-named:
 #analytics
 tf-analytics-collector:
   domain_name: tf-analytics-collector
-  image: willco/tf-analytics-collector
+  image:  docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-analytics-collector:5.1-4.15.0-54-generic
   size: 1
 tf-analytics-api:
   domain_name: tf-analytics-api
-  image: willco/tf-analytics-api
+  image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-analytics-api:5.1-4.15.0-54-generic
+  size: 1
+tf-analytics-alarm-gen:
+  domain_name: tf-analytics-alarm-gen
+  image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-analytics-alarm-gen:5.1-4.15.0-54-generic
+  size: 1
+tf-analytics-query-engine:
+  domain_name: tf-analytics-query-engine
+  image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-analytics-query-engine:5.1-4.15.0-54-generic
+  size: 1
+tf-analytics-snmp:
+  domain_name: tf-analytics-snmp
+  image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-analytics-snmp-collector:5.1-4.15.0-54-generic
+  size: 1
+tf-analytics-topology:
+  domain_name: tf-analytics-topology
+  image: docker-dev-local.docker.mirantis.net/opencontrail-exp-5.1-upstream/contrail-analytics-snmp-topology:5.1-4.15.0-54-generic
   size: 1
