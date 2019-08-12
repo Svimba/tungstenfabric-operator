@@ -36,18 +36,6 @@ func getContainerPortObject(portList []controlv1alpha1.Port) []corev1.ContainerP
 	return list
 }
 
-func getEnvVariablesObject(envs []controlv1alpha1.EnvVar) []corev1.EnvVar {
-	var list []corev1.EnvVar
-	for _, e := range envs {
-		eobj := &corev1.EnvVar{
-			Name:  e.Name,
-			Value: e.Value,
-		}
-		list = append(list, *eobj)
-	}
-	return list
-}
-
 func getServicePortObject(portList []controlv1alpha1.Port) []corev1.ServicePort {
 	var list []corev1.ServicePort
 	for _, p := range portList {
@@ -65,8 +53,6 @@ func newDeploymentForControl(cr *controlv1alpha1.TFControl) *betav1.Deployment {
 	labels := map[string]string{
 		"app": cr.Name + "-control",
 	}
-	// var cmd []string
-	// cmd = append(cmd, "env")
 
 	deploy := &betav1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -107,7 +93,7 @@ func newDeploymentForControl(cr *controlv1alpha1.TFControl) *betav1.Deployment {
 		}
 	}
 	// set environment variable(s) if defined in spec
-	envs := getEnvVariablesObject(cr.Spec.ControlSpec.EnvList)
+	envs := cr.Spec.ControlSpec.EnvList
 	if len(envs) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Env = envs
 	}

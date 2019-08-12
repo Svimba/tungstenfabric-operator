@@ -4,46 +4,41 @@ import (
 	"bytes"
 
 	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 )
 
-// Port .
+// Port - default port definition
 type Port struct {
-	Name     string `yaml:"name"`
-	Port     int32  `yaml:"port"`
-	HostPort int32  `yaml:"host_port"`
+	Name string `yaml:"name"`
+	Port int32  `yaml:"port"`
+	// HostPort int32  `yaml:"host_port"`
 }
 
-// Service .
+// Service - default service definition
 type Service struct {
 	Name  string `yaml:"name"`
 	Ports []Port `yaml:"ports"`
 }
 
-// Env .
-type Env struct {
-	Key   string `yaml:"key"`
-	Value string `yaml:"value"`
-}
-
-// SecCtx .
+// SecCtx - security contect definition
 type SecCtx struct {
 	Capabilities []string `yaml:"capabilities"`
 }
 
-// Entity .
+// Entity - generic entity for each record of default config
 type Entity struct {
-	Name       string    `yaml:"domain_name"`
-	Size       int32     `yaml:"size"`
-	Services   []Service `yaml:"services"`
-	Envs       []Env     `yaml:"envs"`
-	Image      string    `yaml:"image"`
-	SecContext SecCtx    `yaml:"securityContext"`
+	Name       string          `yaml:"domain_name"`
+	Size       int32           `yaml:"size"`
+	Services   []Service       `yaml:"services"`
+	Envs       []corev1.EnvVar `yaml:"envs"`
+	Image      string          `yaml:"image"`
+	SecContext SecCtx          `yaml:"securityContext"`
 }
 
-// Entities .
+// Entities map of entities
 type Entities map[string]*Entity
 
-// Get .
+// Get returns entity by name or empty entity
 func (s *Entities) Get(entity string) *Entity {
 	if (*s)[entity] != nil {
 		return (*s)[entity]
@@ -51,7 +46,7 @@ func (s *Entities) Get(entity string) *Entity {
 	return &Entity{}
 }
 
-// Unmarshal .
+// Unmarshal - unmarshals entitym returns error or nil
 func (s *Entities) Unmarshal(data []byte) error {
 	err := yaml.NewDecoder(bytes.NewReader(data)).Decode(s)
 	if err != nil {

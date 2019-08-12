@@ -24,42 +24,6 @@ func getConfigMapsObject(cr *configv1alpha1.TFConfig) []corev1.EnvFromSource {
 	return list
 }
 
-func getContainerPortObject(portList []configv1alpha1.Port) []corev1.ContainerPort {
-	var list []corev1.ContainerPort
-	for _, p := range portList {
-		pobj := &corev1.ContainerPort{
-			Name:          p.Name,
-			ContainerPort: p.Port,
-		}
-		list = append(list, *pobj)
-	}
-	return list
-}
-
-func getEnvVariablesObject(envs []configv1alpha1.EnvVar) []corev1.EnvVar {
-	var list []corev1.EnvVar
-	for _, e := range envs {
-		eobj := &corev1.EnvVar{
-			Name:  e.Name,
-			Value: e.Value,
-		}
-		list = append(list, *eobj)
-	}
-	return list
-}
-
-func getServicePortObject(portList []configv1alpha1.Port) []corev1.ServicePort {
-	var list []corev1.ServicePort
-	for _, p := range portList {
-		pobj := &corev1.ServicePort{
-			Name: p.Name,
-			Port: p.Port,
-		}
-		list = append(list, *pobj)
-	}
-	return list
-}
-
 // newDeploymentForAPI retuns deployment definition
 func newDeploymentForAPI(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 	labels := map[string]string{
@@ -98,7 +62,7 @@ func newDeploymentForAPI(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.APISpec.Ports)
+	ports := cr.Spec.APISpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -109,7 +73,7 @@ func newDeploymentForAPI(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 		}
 	}
 	// set environment variable(s) if defined in spec
-	envs := getEnvVariablesObject(cr.Spec.APISpec.EnvList)
+	envs := cr.Spec.APISpec.EnvList
 	if len(envs) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Env = envs
 	}
@@ -130,7 +94,7 @@ func newServicesForAPI(cr *configv1alpha1.TFConfig) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.APISpec.Ports)
+	ports := cr.Spec.APISpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
@@ -178,7 +142,7 @@ func newDeploymentForSVCMonitor(cr *configv1alpha1.TFConfig) *betav1.Deployment 
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.SVCMonitorSpec.Ports)
+	ports := cr.Spec.SVCMonitorSpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -186,6 +150,11 @@ func newDeploymentForSVCMonitor(cr *configv1alpha1.TFConfig) *betav1.Deployment 
 		deploy.Spec.Template.Spec.Containers[0].Ports = []corev1.ContainerPort{
 			{Name: "introspect", ContainerPort: 8088},
 		}
+	}
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.SVCMonitorSpec.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
 	}
 
 	return deploy
@@ -205,7 +174,7 @@ func newServicesForSVCMonitor(cr *configv1alpha1.TFConfig) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.SVCMonitorSpec.Ports)
+	ports := cr.Spec.SVCMonitorSpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
@@ -251,6 +220,11 @@ func newDeploymentForSchema(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 	if len(configMaps) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.SchemaSpec.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
+	}
 
 	return deploy
 }
@@ -290,7 +264,7 @@ func newDeploymentForDeviceMgr(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.DeviceMgrSpec.Ports)
+	ports := cr.Spec.DeviceMgrSpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -299,6 +273,12 @@ func newDeploymentForDeviceMgr(cr *configv1alpha1.TFConfig) *betav1.Deployment {
 			{Name: "introspect", ContainerPort: 8087},
 		}
 	}
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.DeviceMgrSpec.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
+	}
+
 	return deploy
 }
 
@@ -316,7 +296,7 @@ func newServicesForDeviceMgr(cr *configv1alpha1.TFConfig) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.DeviceMgrSpec.Ports)
+	ports := cr.Spec.DeviceMgrSpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
