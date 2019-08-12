@@ -24,49 +24,11 @@ func getConfigMapsObject(cr *analyticsv1alpha1.TFAnalytics) []corev1.EnvFromSour
 	return list
 }
 
-func getContainerPortObject(portList []analyticsv1alpha1.Port) []corev1.ContainerPort {
-	var list []corev1.ContainerPort
-	for _, p := range portList {
-		pobj := &corev1.ContainerPort{
-			Name:          p.Name,
-			ContainerPort: p.Port,
-		}
-		list = append(list, *pobj)
-	}
-	return list
-}
-
-func getEnvVariablesObject(envs []analyticsv1alpha1.EnvVar) []corev1.EnvVar {
-	var list []corev1.EnvVar
-	for _, e := range envs {
-		eobj := &corev1.EnvVar{
-			Name:  e.Name,
-			Value: e.Value,
-		}
-		list = append(list, *eobj)
-	}
-	return list
-}
-
-func getServicePortObject(portList []analyticsv1alpha1.Port) []corev1.ServicePort {
-	var list []corev1.ServicePort
-	for _, p := range portList {
-		pobj := &corev1.ServicePort{
-			Name: p.Name,
-			Port: p.Port,
-		}
-		list = append(list, *pobj)
-	}
-	return list
-}
-
 // newDeploymentForAPI retuns deployment definition
 func newDeploymentForAPI(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deployment {
 	labels := map[string]string{
 		"app": cr.Name + "-api",
 	}
-	// var cmd []string
-	// cmd = append(cmd, "env")
 
 	deploy := &betav1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -98,7 +60,7 @@ func newDeploymentForAPI(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deployment {
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.APISpec.Ports)
+	ports := cr.Spec.APISpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -109,7 +71,7 @@ func newDeploymentForAPI(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deployment {
 		}
 	}
 	// set environment variable(s) if defined in spec
-	envs := getEnvVariablesObject(cr.Spec.APISpec.EnvList)
+	envs := cr.Spec.APISpec.EnvList
 	if len(envs) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Env = envs
 	}
@@ -130,7 +92,7 @@ func newServicesForAPI(cr *analyticsv1alpha1.TFAnalytics) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.APISpec.Ports)
+	ports := cr.Spec.APISpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
@@ -178,7 +140,7 @@ func newDeploymentForAlarmGen(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deploym
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.AlarmGenSpec.Ports)
+	ports := cr.Spec.AlarmGenSpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -186,6 +148,12 @@ func newDeploymentForAlarmGen(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deploym
 		deploy.Spec.Template.Spec.Containers[0].Ports = []corev1.ContainerPort{
 			{Name: "introspect", ContainerPort: 5995},
 		}
+	}
+
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.AlarmGenSpec.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
 	}
 
 	return deploy
@@ -205,7 +173,7 @@ func newServicesForAlarmGen(cr *analyticsv1alpha1.TFAnalytics) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.AlarmGenSpec.Ports)
+	ports := cr.Spec.AlarmGenSpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
@@ -252,7 +220,7 @@ func newDeploymentForCollector(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deploy
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.CollectorSpec.Ports)
+	ports := cr.Spec.CollectorSpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -262,6 +230,12 @@ func newDeploymentForCollector(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deploy
 			{Name: "introspect", ContainerPort: 8089},
 		}
 	}
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.CollectorSpec.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
+	}
+
 	return deploy
 }
 
@@ -279,7 +253,7 @@ func newServicesForCollector(cr *analyticsv1alpha1.TFAnalytics) *corev1.Service 
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.CollectorSpec.Ports)
+	ports := cr.Spec.CollectorSpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
@@ -326,7 +300,7 @@ func newDeploymentForQueryEngine(cr *analyticsv1alpha1.TFAnalytics) *betav1.Depl
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.QueryEngine.Ports)
+	ports := cr.Spec.QueryEngine.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -335,6 +309,12 @@ func newDeploymentForQueryEngine(cr *analyticsv1alpha1.TFAnalytics) *betav1.Depl
 			{Name: "introspect", ContainerPort: 8091},
 		}
 	}
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.QueryEngine.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
+	}
+
 	return deploy
 }
 
@@ -352,7 +332,7 @@ func newServicesForQueryEngine(cr *analyticsv1alpha1.TFAnalytics) *corev1.Servic
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.QueryEngine.Ports)
+	ports := cr.Spec.QueryEngine.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
@@ -398,7 +378,7 @@ func newDeploymentForSNMP(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deployment 
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.SNMPSpec.Ports)
+	ports := cr.Spec.SNMPSpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -407,6 +387,12 @@ func newDeploymentForSNMP(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deployment 
 			{Name: "introspect", ContainerPort: 5920},
 		}
 	}
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.SNMPSpec.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
+	}
+
 	return deploy
 }
 
@@ -424,7 +410,7 @@ func newServicesForSNMP(cr *analyticsv1alpha1.TFAnalytics) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.SNMPSpec.Ports)
+	ports := cr.Spec.SNMPSpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {
@@ -470,7 +456,7 @@ func newDeploymentForTopology(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deploym
 		deploy.Spec.Template.Spec.Containers[0].EnvFrom = configMaps
 	}
 	// set ports if defined
-	ports := getContainerPortObject(cr.Spec.TopologySpec.Ports)
+	ports := cr.Spec.TopologySpec.Ports.GetContainerPortList()
 	if len(ports) > 0 {
 		deploy.Spec.Template.Spec.Containers[0].Ports = ports
 	} else {
@@ -479,6 +465,12 @@ func newDeploymentForTopology(cr *analyticsv1alpha1.TFAnalytics) *betav1.Deploym
 			{Name: "introspect", ContainerPort: 5921},
 		}
 	}
+	// set environment variable(s) if defined in spec
+	envs := cr.Spec.TopologySpec.EnvList
+	if len(envs) > 0 {
+		deploy.Spec.Template.Spec.Containers[0].Env = envs
+	}
+
 	return deploy
 }
 
@@ -496,7 +488,7 @@ func newServicesForTopology(cr *analyticsv1alpha1.TFAnalytics) *corev1.Service {
 			Selector: labels,
 		},
 	}
-	ports := getServicePortObject(cr.Spec.TopologySpec.Ports)
+	ports := cr.Spec.TopologySpec.Ports.GetServicePortList()
 	if len(ports) > 0 {
 		service.Spec.Ports = ports
 	} else {

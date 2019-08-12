@@ -105,8 +105,10 @@ func (in *TFControlControlSpec) DeepCopyInto(out *TFControlControlSpec) {
 	}
 	if in.EnvList != nil {
 		in, out := &in.EnvList, &out.EnvList
-		*out = make([]EnvVar, len(*in))
-		copy(*out, *in)
+		*out = make([]v1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -133,6 +135,13 @@ func (in *TFControlDnsSpec) DeepCopyInto(out *TFControlDnsSpec) {
 		in, out := &in.Ports, &out.Ports
 		*out = make([]Port, len(*in))
 		copy(*out, *in)
+	}
+	if in.EnvList != nil {
+		in, out := &in.EnvList, &out.EnvList
+		*out = make([]v1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -194,6 +203,13 @@ func (in *TFControlNamedSpec) DeepCopyInto(out *TFControlNamedSpec) {
 		copy(*out, *in)
 	}
 	in.SecurityContext.DeepCopyInto(&out.SecurityContext)
+	if in.EnvList != nil {
+		in, out := &in.EnvList, &out.EnvList
+		*out = make([]v1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -217,6 +233,13 @@ func (in *TFControlSpec) DeepCopyInto(out *TFControlSpec) {
 		in, out := &in.ConfigMapList, &out.ConfigMapList
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.EnvList != nil {
+		in, out := &in.EnvList, &out.EnvList
+		*out = make([]v1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }

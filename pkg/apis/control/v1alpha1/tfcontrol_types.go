@@ -27,36 +27,39 @@ type SecCtx struct {
 
 // TFControlControlSpec defines the desired state of control service from TF Control group
 type TFControlControlSpec struct {
-	Enabled  bool     `json:"enabled,omitempty"`
-	Replicas *int32   `json:"replicas"`
-	Image    string   `json:"image"`
-	Ports    []Port   `json:"ports,omitempty"`
-	EnvList  []EnvVar `json:"env"`
+	Enabled  bool            `json:"enabled,omitempty"`
+	Replicas *int32          `json:"replicas"`
+	Image    string          `json:"image"`
+	Ports    []Port          `json:"ports,omitempty"`
+	EnvList  []corev1.EnvVar `json:"env"`
 }
 
 // TFControlNamedSpec defines the desired state of named service from TF Control group
 type TFControlNamedSpec struct {
-	Enabled         bool    `json:"enabled,omitempty"`
-	Replicas        *int32  `json:"replicas"`
-	Image           string  `json:"image"`
-	Ports           []Port  `json:"ports,omitempty"`
-	SecurityContext SecCtx  `json:"securityContext,omitempty"`
+	Enabled         bool            `json:"enabled,omitempty"`
+	Replicas        *int32          `json:"replicas"`
+	Image           string          `json:"image"`
+	Ports           []Port          `json:"ports,omitempty"`
+	SecurityContext SecCtx          `json:"securityContext,omitempty"`
+	EnvList         []corev1.EnvVar `json:"env"`
 }
 
 // TFControlDnsSpec defines the desired state of dns service from TF Control group
 type TFControlDnsSpec struct {
-	Enabled  bool   `json:"enabled,omitempty"`
-	Replicas *int32 `json:"replicas"`
-	Image    string `json:"image"`
-	Ports    []Port `json:"ports,omitempty"`
+	Enabled  bool            `json:"enabled,omitempty"`
+	Replicas *int32          `json:"replicas"`
+	Image    string          `json:"image"`
+	Ports    []Port          `json:"ports,omitempty"`
+	EnvList  []corev1.EnvVar `json:"env"`
 }
 
-// TFConfigSpec defines the desired state of TFConfig
+// TFControlSpec defines the desired state of TFConfig
 type TFControlSpec struct {
-	ControlSpec    TFControlControlSpec   `json:"control"`
-	NamedSpec      TFControlNamedSpec     `json:"named"`
-	DnsSpec        TFControlDnsSpec       `json:"dns"`
-	ConfigMapList  []string               `json:"configmaps,omitempty"`
+	ControlSpec   TFControlControlSpec `json:"control"`
+	NamedSpec     TFControlNamedSpec   `json:"named"`
+	DnsSpec       TFControlDnsSpec     `json:"dns"`
+	ConfigMapList []string             `json:"configmaps,omitempty"`
+	EnvList       []corev1.EnvVar      `json:"env"`
 }
 
 // TFControlStatus defines the observed state of TFControl

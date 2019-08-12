@@ -22,20 +22,12 @@ func convertPortsToConfigPorts(svc []Service) []configv1alpha1.Port {
 	return out
 }
 
-func convertEnvsToConfigEnvs(envs []Env) []configv1alpha1.EnvVar {
-	var out []configv1alpha1.EnvVar
-	for _, e := range envs {
-		out = append(out, configv1alpha1.EnvVar{Name: e.Key, Value: e.Value})
-	}
-	return out
-}
-
 // newCRForConfig returns CR object for Config
 func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *configv1alpha1.TFConfig {
 	replicas := make(map[string]*int32)
 	image := make(map[string]string)
 	ports := make(map[string][]configv1alpha1.Port)
-	envs := make(map[string][]configv1alpha1.EnvVar)
+	envs := make(map[string][]corev1.EnvVar)
 
 	// API
 	if &cr.Spec.TFConfig.APISpec != nil {
@@ -48,7 +40,7 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		if ports["api"] = convertPortsToConfigPorts(defaults.Get("tf-config-api").Services); len(cr.Spec.TFConfig.APISpec.Ports) > 0 {
 			ports["api"] = cr.Spec.TFConfig.APISpec.Ports
 		}
-		if envs["api"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-api").Envs); len(cr.Spec.TFConfig.APISpec.EnvList) > 0 {
+		if envs["api"] = defaults.Get("tf-config-api").Envs; len(cr.Spec.TFConfig.APISpec.EnvList) > 0 {
 			envs["api"] = cr.Spec.TFConfig.APISpec.EnvList
 		}
 	}
@@ -63,7 +55,7 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		if ports["svc-monitor"] = convertPortsToConfigPorts(defaults.Get("tf-config-svc-monitor").Services); len(cr.Spec.TFConfig.SVCMonitorSpec.Ports) > 0 {
 			ports["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.Ports
 		}
-		if envs["svc-monitor"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-svc-monitor").Envs); len(cr.Spec.TFConfig.SVCMonitorSpec.EnvList) > 0 {
+		if envs["svc-monitor"] = defaults.Get("tf-config-svc-monitor").Envs; len(cr.Spec.TFConfig.SVCMonitorSpec.EnvList) > 0 {
 			envs["svc-monitor"] = cr.Spec.TFConfig.SVCMonitorSpec.EnvList
 		}
 	}
@@ -75,7 +67,7 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		if image["schema"] = defaults.Get("tf-config-schema").Image; len(cr.Spec.TFConfig.SchemaSpec.Image) > 0 {
 			image["schema"] = cr.Spec.TFConfig.SchemaSpec.Image
 		}
-		if envs["schema"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-schema").Envs); len(cr.Spec.TFConfig.SchemaSpec.EnvList) > 0 {
+		if envs["schema"] = defaults.Get("tf-config-schema").Envs; len(cr.Spec.TFConfig.SchemaSpec.EnvList) > 0 {
 			envs["schema"] = cr.Spec.TFConfig.SchemaSpec.EnvList
 		}
 	}
@@ -90,7 +82,7 @@ func newCRForConfig(cr *operatorv1alpha1.TFOperator, defaults *Entities) *config
 		if ports["devicemgr"] = convertPortsToConfigPorts(defaults.Get("tf-config-devicemgr").Services); len(cr.Spec.TFConfig.DeviceMgrSpec.Ports) > 0 {
 			ports["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.Ports
 		}
-		if envs["devicemgr"] = convertEnvsToConfigEnvs(defaults.Get("tf-config-devicemgr").Envs); len(cr.Spec.TFConfig.DeviceMgrSpec.EnvList) > 0 {
+		if envs["devicemgr"] = defaults.Get("tf-config-devicemgr").Envs; len(cr.Spec.TFConfig.DeviceMgrSpec.EnvList) > 0 {
 			envs["devicemgr"] = cr.Spec.TFConfig.DeviceMgrSpec.EnvList
 		}
 	}
@@ -140,14 +132,6 @@ func convertPortsToControlPorts(svc []Service) []controlv1alpha1.Port {
 		for _, p := range s.Ports {
 			out = append(out, controlv1alpha1.Port{Name: p.Name, Port: p.Port})
 		}
-	}
-	return out
-}
-
-func convertEnvsToControlEnvs(envs []Env) []controlv1alpha1.EnvVar {
-	var out []controlv1alpha1.EnvVar
-	for _, e := range envs {
-		out = append(out, controlv1alpha1.EnvVar{Name: e.Key, Value: e.Value})
 	}
 	return out
 }

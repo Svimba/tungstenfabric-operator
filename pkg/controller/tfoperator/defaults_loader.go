@@ -4,26 +4,27 @@ import (
 	"bytes"
 
 	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 )
 
-// Port .
+// Port - default port definition
 type Port struct {
-	Name     string `yaml:"name"`
-	Port     int32  `yaml:"port"`
-	HostPort int32  `yaml:"host_port"`
+	Name string `yaml:"name"`
+	Port int32  `yaml:"port"`
+	// HostPort int32  `yaml:"host_port"`
 }
 
-// Service .
+// Service - default service definition
 type Service struct {
 	Name  string `yaml:"name"`
 	Ports []Port `yaml:"ports"`
 }
 
-// Env .
-type Env struct {
-	Key   string `yaml:"key"`
-	Value string `yaml:"value"`
-}
+// // Env .
+// type Env struct {
+// 	Key   string `yaml:"key"`
+// 	Value string `yaml:"value"`
+// }
 
 // SecCtx .
 type SecCtx struct {
@@ -32,12 +33,12 @@ type SecCtx struct {
 
 // Entity .
 type Entity struct {
-	Name       string    `yaml:"domain_name"`
-	Size       int32     `yaml:"size"`
-	Services   []Service `yaml:"services"`
-	Envs       []Env     `yaml:"envs"`
-	Image      string    `yaml:"image"`
-	SecContext SecCtx    `yaml:"securityContext"`
+	Name       string          `yaml:"domain_name"`
+	Size       int32           `yaml:"size"`
+	Services   []Service       `yaml:"services"`
+	Envs       []corev1.EnvVar `yaml:"envs"`
+	Image      string          `yaml:"image"`
+	SecContext SecCtx          `yaml:"securityContext"`
 }
 
 // Entities .

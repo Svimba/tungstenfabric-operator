@@ -3,11 +3,11 @@ rabbitmq:
   size: 3
   domain_name: rabbitmq
   envs:
-    - key: HOST_IP
+    - name: HOST_IP
       value: 127.0.0.1
-  services: 
+  services:
     - name: rabbitmq
-      ports: 
+      ports:
         - name: queue-port
           port: 5672
           proto: TCP
@@ -38,13 +38,13 @@ zookeeper:
   domain_name: zookeeper
   size: 3
   services:
-    - name: tf-zookeeper
+    - name: tf-zookeeper-client
       ports:
         - name: zk
           port: 2181
 
 
-# TF default configuration 
+# TF default configuration
 # config
 tf-config-api:
   domain_name: tf-config-api
@@ -105,7 +105,7 @@ tf-control-named:
   securityContext:
     capabilities:
     - DAC_READ_SEARCH
-    - SYS_RESOURCE 
+    - SYS_RESOURCE
 
 #analytics
 tf-analytics-collector:
